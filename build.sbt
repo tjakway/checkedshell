@@ -1,6 +1,6 @@
 name := "checkedshell"
 version := "1.0"
-scalaVersion := "2.13.0"
+scalaVersion := "2.12.9"
 
 resolvers += Resolver.typesafeIvyRepo("releases")
 resolvers += Resolver.sonatypeRepo("snapshots")
