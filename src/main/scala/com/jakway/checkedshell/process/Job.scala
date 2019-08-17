@@ -45,8 +45,11 @@ trait Job {
 
   protected def runJob(input: Option[ProgramOutput])
                       (implicit ec: ExecutionContext): JobOutput
+
   protected def copyWithNewRunJob(newRunJob: Option[ProgramOutput] =>
-                                             ExecutionContext => JobOutput): Job
+                                             ExecutionContext => JobOutput): Job = {
+    new MultiStepJob(newRunJob)
+  }
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 

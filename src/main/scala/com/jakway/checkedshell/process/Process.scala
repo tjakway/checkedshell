@@ -25,6 +25,4 @@ class Process(val nativeProc: NativeProcessType,
 
 object Process {
   type NativeProcessType = scala.sys.process.Process
-
-  
 }
