@@ -4,6 +4,7 @@ import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.ProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
+import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
 import com.jakway.checkedshell.process.Job.JobOutput
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,9 +45,11 @@ trait Job {
 
   protected def doRun(input: Option[ProgramOutput]): JobOutput
 
-  def checks: Set[CheckFunction]
+  def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 }
 
 object Job {
   type JobOutput = Future[ProgramOutput]
+
+  lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 }
