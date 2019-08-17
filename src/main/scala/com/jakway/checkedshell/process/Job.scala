@@ -2,8 +2,9 @@ package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.ProgramOutput
-import com.jakway.checkedshell.error.{ErrorCause, ErrorData}
-import com.jakway.checkedshell.process.Job.{CheckFunction, JobOutput}
+import com.jakway.checkedshell.error.ErrorData
+import com.jakway.checkedshell.error.cause.ErrorCause
+import com.jakway.checkedshell.process.Job.JobOutput
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -48,6 +49,4 @@ trait Job {
 
 object Job {
   type JobOutput = Future[ProgramOutput]
-
-  type CheckFunction = ProgramOutput => Option[ErrorCause]
 }
