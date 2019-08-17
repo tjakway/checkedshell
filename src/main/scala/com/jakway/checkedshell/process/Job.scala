@@ -14,7 +14,7 @@ trait Job {
                (implicit runConfiguration: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
 
-    doRun(input)
+    runJob(input)
       .map { output =>
 
         val errs = checks.foldLeft(Set.empty: Set[ErrorCause]) {
@@ -43,9 +43,37 @@ trait Job {
     runConfiguration.errorBehavior.handleError(e)
   }
 
-  protected def doRun(input: Option[ProgramOutput]): JobOutput
+  protected def runJob(input: Option[ProgramOutput])
+                      (implicit ec: ExecutionContext): JobOutput
+  protected def copyWithNewRunJob(newRunJob: Option[ProgramOutput] =>
+                                             ExecutionContext => JobOutput): Job
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
+
+  def map(f: ProgramOutput => ProgramOutput): Job = {
+    def newRunJob(input: Option[ProgramOutput])
+                 (implicit ec: ExecutionContext): JobOutput = {
+      runJob(input).map(f)
+    }
+
+    //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
+    def g: Option[ProgramOutput] => ExecutionContext => JobOutput =
+      a => b => newRunJob(a)(b)
+    copyWithNewRunJob(g)
+  }
+
+  //TODO: remove duplication between map and flatMap
+  def flatMap(f: ProgramOutput => JobOutput): Job = {
+    def newRunJob(input: Option[ProgramOutput])
+                 (implicit ec: ExecutionContext): JobOutput = {
+      runJob(input).flatMap(f)
+    }
+
+    //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
+    def g: Option[ProgramOutput] => ExecutionContext => JobOutput =
+      a => b => newRunJob(a)(b)
+    copyWithNewRunJob(g)
+  }
 }
 
 object Job {
