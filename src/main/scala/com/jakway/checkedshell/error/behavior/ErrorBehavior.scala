@@ -1,10 +1,4 @@
-package com.jakway.checkedshell.error
-
-import java.util.Formatter
-
-import com.jakway.checkedshell.Util
-import com.jakway.checkedshell.error.ErrorBehavior.ErrorData
-import org.slf4j.{Logger, LoggerFactory}
+package com.jakway.checkedshell.error.behavior
 
 trait ErrorBehavior {
   def handleError(errorData: ErrorData): Unit

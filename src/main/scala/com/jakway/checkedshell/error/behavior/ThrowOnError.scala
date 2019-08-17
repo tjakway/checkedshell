@@ -1,6 +1,6 @@
-package com.jakway.checkedshell.error
+package com.jakway.checkedshell.error.behavior
 
-import com.jakway.checkedshell.error.ErrorBehavior.ErrorData
+import com.jakway.checkedshell.error.behavior.ErrorBehavior.ErrorData
 
 object ThrowOnError extends ErrorBehavior {
   override def handleError(errorData: ErrorData): Unit = {
