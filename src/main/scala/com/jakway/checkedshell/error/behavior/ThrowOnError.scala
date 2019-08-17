@@ -1,6 +1,6 @@
 package com.jakway.checkedshell.error.behavior
 
-import com.jakway.checkedshell.error.ErrorData
+import com.jakway.checkedshell.error.{CheckedShellException, ErrorData}
 
 object ThrowOnError extends ErrorBehavior {
   override def handleError(errorData: ErrorData): Unit = {
@@ -8,16 +8,6 @@ object ThrowOnError extends ErrorBehavior {
   }
 
   def errorDataToException(errorData: ErrorData): Exception = {
-    val x = errorData.description match {
-      case Some(desc) => new RuntimeException(desc)
-      case None => new RuntimeException()
-    }
-
-    errorData.throwable match {
-      case Some(t) => x.initCause(t)
-      case None => {}
-    }
-
-    x
+    new CheckedShellException(ErrorData.formatErrorData(errorData))
   }
 }
