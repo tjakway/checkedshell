@@ -3,42 +3,21 @@ package com.jakway.checkedshell.error.behavior
 import java.util.Formatter
 
 import com.jakway.checkedshell.Util
+import com.jakway.checkedshell.error.ErrorData
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
  * @param logF error logging function
  */
 class LogError(val logF: LogError.LogF = LogError.defaultLogF,
-               val messageSeparator: String = ": ",
-               val maxThrowableLines: Int = 15) extends ErrorBehavior {
-                 val logger: Logger = LoggerFactory.getLogger(getClass)
+               val messageSeparator: String = LogError.defaultMessageSeparator)
+  extends ErrorBehavior {
+   val logger: Logger = LoggerFactory.getLogger(getClass)
 
-                 def formatErrorData(e: ErrorData): String = {
-                   val fmt = new Formatter()
+   def formatErrorData(e: ErrorData): String = LogError.formatErrorData(e, messageSeparator)
 
-                   e match {
-                     case ErrorData(None, None) => fmt.format("Unknown error")
-                     case _ => {
-                       e.description.foreach { desc =>
-                         fmt.format(desc)
-                       }
-
-                       //add a separator if there's both a message and a throwable
-                       if(e.description.isDefined && e.throwable.isDefined) {
-                         fmt.format(messageSeparator)
-                       }
-
-                       e.throwable.foreach { t =>
-                         fmt.format(Util.throwableToString(t, maxThrowableLines))
-                       }
-                     }
-                   }
-
-                   fmt.toString
-                 }
-
-                 override def handleError(errorData: ErrorData): Unit = logF(logger)(formatErrorData(errorData))
-               }
+   override def handleError(errorData: ErrorData): Unit = logF(logger)(formatErrorData(errorData))
+ }
 
 object LogError {
   type LogF = Logger => String => Unit
@@ -50,4 +29,20 @@ object LogError {
   def error: LogF = l => m => l.error(m)
 
   def defaultLogF: LogF = error
+
+  val defaultMessageSeparator: String = ": "
+
+  def formatErrorData(e: ErrorData,
+                      messageSeparator: String = defaultMessageSeparator): String = {
+
+    val fmt = new Formatter()
+
+    e.description.foreach { desc =>
+      fmt.format("%s%s", desc, messageSeparator)
+    }
+
+    fmt.format("Error cause: %s", e.cause.toString)
+
+    fmt.toString
+  }
 }
