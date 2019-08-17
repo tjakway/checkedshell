@@ -30,7 +30,7 @@ class Process(val nativeProc: NativeProcessType)
     with StdoutStreamWriter
     with StderrStreamWriter {
 
-  lazy val bufLogger = new process.Process.BufLogger()
+  lazy val bufLogger = new process.Process.BufLogger() {}
   override def onStdoutWrite(s: String): Unit = bufLogger.stdoutBuf.append(s)
   override def onStderrWrite(s: String): Unit = bufLogger.stderrBuf.append(s)
 
@@ -74,7 +74,7 @@ class Process(val nativeProc: NativeProcessType)
 object Process {
   type NativeProcessType = scala.sys.process.ProcessBuilder
 
-  class BufLogger extends StdoutStreamWriter with StderrStreamWriter {
+  trait BufLogger extends StdoutStreamWriter with StderrStreamWriter {
     val stdoutBuf: StringBuilder = new StringBuilder()
     val stderrBuf: StringBuilder = new StringBuilder()
 
