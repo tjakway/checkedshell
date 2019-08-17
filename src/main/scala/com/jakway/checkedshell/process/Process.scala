@@ -1,12 +1,14 @@
 package com.jakway.checkedshell.process
 
+import java.io.File
+
 import com.jakway.checkedshell.data.ProgramOutput
 import com.jakway.checkedshell.process
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.Process.NativeProcessType
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.ProcessLogger
+import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
 
 trait StdoutStreamWriter {
   def onStdoutWrite(s: String): Unit
@@ -35,12 +37,31 @@ class Process(val nativeProc: NativeProcessType)
   override def getStdout(): String = bufLogger.stdoutBuf.toString()
   override def getStderr(): String = bufLogger.stderrBuf.toString()
 
+  //we copy some common constructors here for convenience
+  //for others, use the scala.sys.process.Process companion object's apply methods
+  //directly
+  def this(args: Seq[String]) {
+    this(SProcess(args))
+  }
+
+  def this(args: Seq[String], cwd: Option[File]) {
+    this(SProcess(args, cwd))
+  }
+
+  def this(proc: String, args: Seq[String], cwd: Option[File]) {
+    this(SProcess(Seq(proc) ++ args, cwd))
+  }
+
+  def this(proc: String, args: Seq[String]) {
+    this(proc, args, None)
+  }
+
   override protected def runJob(input: Option[ProgramOutput])
                                (implicit ec: ExecutionContext): JobOutput = {
     Future {
       //block until exit
       val exitCode: Int = nativeProc.!(
-        ProcessLogger(onStdoutWrite,
+        SProcessLogger(onStdoutWrite,
                       onStderrWrite))
 
       new ProgramOutput(exitCode,
