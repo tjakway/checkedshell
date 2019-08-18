@@ -70,7 +70,7 @@ class Process(val processData: ProcessData,
       val stderr = streamWriters.stderrWriter.map(_.toString).getOrElse("")
 
       if(rc.closeStreamsAfterExit) {
-        closeAllStreams(processData)
+        closeAllStreams(rc)
         logger.debug("Streams closed")
       }
 
@@ -85,8 +85,8 @@ object Process {
   def processWithStandardStreams(processData: ProcessData): Process = {
     val standardStreamWriters = new StandardStreamWriters()
     new Process(
-      processData.addStreamWriters(standardStreamWriters.writerMap),
-      standardStreamWriters)
+      processData,
+      standardStreamWriters.streamWriters)
   }
 
   //TODO: add more factory methods (apply)
