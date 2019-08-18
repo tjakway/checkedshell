@@ -51,4 +51,6 @@ object Process {
       processData.addStreamWriters(standardStreamWriters.writerMap),
       standardStreamWriters)
   }
+
+  //TODO: add more factory methods (apply)
 }
