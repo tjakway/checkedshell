@@ -1,9 +1,12 @@
 package com.jakway.checkedshell.process
 
+import java.io.{InputStream, StringReader}
+
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.stream.StandardStreamWriters
+import org.apache.commons.io.input.ReaderInputStream
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{ProcessLogger => SProcessLogger}
@@ -22,6 +25,12 @@ class Process(val processData: ProcessData,
 
   override def copyWithProcessData(newProcessData: ProcessData): Process =
     new Process(newProcessData, standardStreamWriters)
+
+  private def programOutputToInputStream(output: ProgramOutput)
+                                        (implicit rc: RunConfiguration): InputStream = {
+
+    new ReaderInputStream(new StringReader(output.stdout), rc.charset)
+  }
 
   override protected def runJob(input: Option[ProgramOutput])
                                (implicit rc: RunConfiguration,
