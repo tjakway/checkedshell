@@ -33,7 +33,7 @@ case class ProcessData(nativeProcess: NativeProcessType,
 
     val combinedError = CloseStreamErrors(errs)
 
-    val errorData: ErrorData = ErrorData(Some("Stream close errors", combinedError))
+    val errorData: ErrorData = ErrorData(Some("Stream close errors"), combinedError)
     rc.errorBehavior.handleError(errorData)
   }
 }
