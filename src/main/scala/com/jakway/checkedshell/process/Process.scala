@@ -17,7 +17,7 @@ import scala.sys.process.{ProcessBuilder => SProcessBuilder}
  */
 class Process(val processData: ProcessData,
               val streamWriters: StreamWriters)
-  extends Job[Process]
+  extends Job
     with HasProcessData[Process] {
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)

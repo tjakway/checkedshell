@@ -9,8 +9,8 @@ import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait Job[A]
-  extends HasStreamWriters[A] {
+trait Job
+  extends HasStreamWriters[Job] {
 
   final def run(input: Option[ProgramOutput])
                (implicit runConfiguration: RunConfiguration,
@@ -50,7 +50,7 @@ trait Job[A]
                                 ec: ExecutionContext): JobOutput
 
   protected def copyWithNewRunJob(newRunJob: RunJobF): Job = {
-    new MultiStepJob(newRunJob)
+    new MultiStepJob(newRunJob, getStreamWriters)
   }
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions

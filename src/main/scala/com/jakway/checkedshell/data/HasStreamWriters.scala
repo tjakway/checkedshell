@@ -8,7 +8,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import scala.util.{Failure, Success, Try}
 
 
-trait HasStreamWriters[A] {
+trait HasStreamWriters[+A] {
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   protected def getStreamWriters: StreamWriters
