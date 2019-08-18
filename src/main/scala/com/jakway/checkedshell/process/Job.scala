@@ -44,7 +44,8 @@ trait Job {
   }
 
   protected def runJob(input: Option[ProgramOutput])
-                      (implicit ec: ExecutionContext): JobOutput
+                      (implicit rc: RunConfiguration,
+                                ec: ExecutionContext): JobOutput
 
   protected def copyWithNewRunJob(newRunJob: Option[ProgramOutput] =>
                                              ExecutionContext => JobOutput): Job = {

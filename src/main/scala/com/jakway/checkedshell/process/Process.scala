@@ -2,6 +2,7 @@ package com.jakway.checkedshell.process
 
 import java.io.File
 
+import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
 import com.jakway.checkedshell.process
 import com.jakway.checkedshell.process.Job.JobOutput
@@ -15,7 +16,11 @@ import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
  * implements stream writes using a buffer logger by default
  */
 class Process(val processData: ProcessData)
-  extends Job {
+  extends Job
+    with HasProcessData[Process] {
+
+  override def copyWithProcessData(newProcessData: ProcessData): Process =
+    new Process(newProcessData)
 
   lazy val bufLogger = new process.Process.BufLogger() {}
   override def onStdoutWrite(s: String): Unit = bufLogger.stdoutBuf.append(s)
@@ -44,12 +49,15 @@ class Process(val processData: ProcessData)
   }
 
   override protected def runJob(input: Option[ProgramOutput])
-                               (implicit ec: ExecutionContext): JobOutput = {
+                               (implicit rc: RunConfiguration,
+                                         ec: ExecutionContext): JobOutput = {
     Future {
       //block until exit
-      val exitCode: Int = nativeProc.!(
+      val exitCode: Int = processData.nativeProcess.!(
         SProcessLogger(onStdoutWrite,
                       onStderrWrite))
+
+      closeAllStreams(processData)
 
       new ProgramOutput(exitCode,
         getStdout(),
