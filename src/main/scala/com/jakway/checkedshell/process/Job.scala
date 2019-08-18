@@ -5,7 +5,7 @@ import com.jakway.checkedshell.data.ProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.JobOutput
+import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -47,8 +47,7 @@ trait Job {
                       (implicit rc: RunConfiguration,
                                 ec: ExecutionContext): JobOutput
 
-  protected def copyWithNewRunJob(newRunJob: Option[ProgramOutput] =>
-                                             ExecutionContext => JobOutput): Job = {
+  protected def copyWithNewRunJob(newRunJob: RunJobF): Job = {
     new MultiStepJob(newRunJob)
   }
 
@@ -56,32 +55,38 @@ trait Job {
 
   def map(f: ProgramOutput => ProgramOutput): Job = {
     def newRunJob(input: Option[ProgramOutput])
-                 (implicit ec: ExecutionContext): JobOutput = {
+                 (implicit rc: RunConfiguration,
+                           ec: ExecutionContext): JobOutput = {
       runJob(input).map(f)
     }
 
     //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
-    def g: Option[ProgramOutput] => ExecutionContext => JobOutput =
-      a => b => newRunJob(a)(b)
+    def g: RunJobF =
+      a => (rc: RunConfiguration, ec: ExecutionContext) => newRunJob(a)(rc, ec)
     copyWithNewRunJob(g)
   }
 
   //TODO: remove duplication between map and flatMap
+  //difficult because most of the code is signatures with little actual work
   def flatMap(f: ProgramOutput => JobOutput): Job = {
     def newRunJob(input: Option[ProgramOutput])
-                 (implicit ec: ExecutionContext): JobOutput = {
+                 (implicit rc: RunConfiguration,
+                           ec: ExecutionContext): JobOutput = {
       runJob(input).flatMap(f)
     }
 
     //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
-    def g: Option[ProgramOutput] => ExecutionContext => JobOutput =
-      a => b => newRunJob(a)(b)
+    def g: RunJobF =
+      a => (rc: RunConfiguration, ec: ExecutionContext) => newRunJob(a)(rc, ec)
     copyWithNewRunJob(g)
   }
 }
 
 object Job {
   type JobOutput = Future[ProgramOutput]
+  type RunJobF = Option[ProgramOutput] =>
+                  (RunConfiguration, ExecutionContext) =>
+                    JobOutput
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 }
