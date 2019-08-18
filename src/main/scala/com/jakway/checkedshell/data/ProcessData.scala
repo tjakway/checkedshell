@@ -12,10 +12,9 @@ case class ProcessData(nativeProcess: NativeProcessType,
   val logger: Logger = LoggerFactory.getLogger(getClass)
 
   /**
-   * return a new copy of ProcessData will the passed StreamWriters added
-   * to the existing writers
    * @param additionalWriters
-   * @return
+   * @return a new copy of ProcessData will the passed StreamWriters added
+   *         to the existing writers
    */
   def addStreamWriters(additionalWriters: StreamWriters): ProcessData = {
     val res = additionalWriters.foldLeft(streamWriters) {
