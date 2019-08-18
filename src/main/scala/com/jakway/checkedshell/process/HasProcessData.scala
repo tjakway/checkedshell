@@ -13,16 +13,19 @@ trait HasProcessData[A] {
   def closeAllStreams(processData: ProcessData)(implicit rc: RunConfiguration): Unit = {
     val empty: Seq[Throwable] = Seq.empty
     val errs = processData.streamWriters.foldLeft(empty) {
-      case (acc, (descriptor, writer)) => {
-        Try(writer.close()) match {
-          case Success(_) => acc
-          case Failure(t) => {
-            val closeStreamError: Throwable =
-              new CloseStreamError(s"Exception thrown" +
-                s" while closing stream $descriptor")
-                .initCause(t)
+      case (acc, (descriptor, writers)) => {
+        acc ++ writers.foldLeft(Seq.empty: Seq[Throwable]) {
+          case (wAcc, writer) =>
+            Try(writer.close()) match {
+              case Success(_) => wAcc
+              case Failure(t) => {
+                val closeStreamError: Throwable =
+                  new CloseStreamError(s"Exception thrown" +
+                    s" while closing stream $descriptor")
+                    .initCause(t)
 
-            acc :+ closeStreamError
+                wAcc :+ closeStreamError
+            }
           }
         }
       }

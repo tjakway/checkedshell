@@ -7,6 +7,7 @@ import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
 import com.jakway.checkedshell.process
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.Process.NativeProcessType
+import com.jakway.checkedshell.process.stream.StandardStreamWriters
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
@@ -15,38 +16,13 @@ import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
  * a job that runs as an external process
  * implements stream writes using a buffer logger by default
  */
-class Process(val processData: ProcessData)
+class Process(val processData: ProcessData,
+              private val standardStreamWriters: StandardStreamWriters)
   extends Job
     with HasProcessData[Process] {
 
   override def copyWithProcessData(newProcessData: ProcessData): Process =
-    new Process(newProcessData)
-
-  lazy val bufLogger = new process.Process.BufLogger() {}
-  override def onStdoutWrite(s: String): Unit = bufLogger.stdoutBuf.append(s)
-  override def onStderrWrite(s: String): Unit = bufLogger.stderrBuf.append(s)
-
-  override def getStdout(): String = bufLogger.stdoutBuf.toString()
-  override def getStderr(): String = bufLogger.stderrBuf.toString()
-
-  //we copy some common constructors here for convenience
-  //for others, use the scala.sys.process.Process companion object's apply methods
-  //directly
-  def this(args: Seq[String]) {
-    this(SProcess(args))
-  }
-
-  def this(args: Seq[String], cwd: Option[File]) {
-    this(SProcess(args, cwd))
-  }
-
-  def this(proc: String, args: Seq[String], cwd: Option[File]) {
-    this(SProcess(Seq(proc) ++ args, cwd))
-  }
-
-  def this(proc: String, args: Seq[String]) {
-    this(proc, args, None)
-  }
+    new Process(newProcessData, standardStreamWriters)
 
   override protected def runJob(input: Option[ProgramOutput])
                                (implicit rc: RunConfiguration,
@@ -54,14 +30,15 @@ class Process(val processData: ProcessData)
     Future {
       //block until exit
       val exitCode: Int = processData.nativeProcess.!(
-        SProcessLogger(onStdoutWrite,
-                      onStderrWrite))
+        SProcessLogger(standardStreamWriters.writeStdout,
+          standardStreamWriters.writeStderr))
+
+      val stdout = standardStreamWriters.stdoutWriter.toString
+      val stderr = standardStreamWriters.stderrWriter.toString
 
       closeAllStreams(processData)
 
-      new ProgramOutput(exitCode,
-        getStdout(),
-        getStderr())
+      new ProgramOutput(exitCode, stdout, stderr)
     }
   }
 }
@@ -69,14 +46,10 @@ class Process(val processData: ProcessData)
 object Process {
   type NativeProcessType = scala.sys.process.ProcessBuilder
 
-  trait BufLogger extends StdoutStreamWriter with StderrStreamWriter {
-    val stdoutBuf: StringBuilder = new StringBuilder()
-    val stderrBuf: StringBuilder = new StringBuilder()
-
-    override def onStdoutWrite(s: String): Unit = stdoutBuf.append(s)
-    override def onStderrWrite(s: String): Unit = stderrBuf.append(s)
-
-    override def getStdout(): String = stdoutBuf.toString()
-    override def getStderr(): String = stderrBuf.toString()
+  def processWithStandardStreams(processData: ProcessData): Process = {
+    val standardStreamWriters = new StandardStreamWriters()
+    new Process(
+      processData.addStreamWriters(standardStreamWriters.writerMap),
+      standardStreamWriters)
   }
 }
