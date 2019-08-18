@@ -3,7 +3,6 @@ package com.jakway.checkedshell.process
 import java.io.{InputStream, StringReader}
 
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.WithStreamWriters.StreamWriters
 import com.jakway.checkedshell.data.{ProcessData, ProgramOutput, StreamWriters}
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.stream.StandardStreamWriters
@@ -11,7 +10,7 @@ import org.apache.commons.io.input.ReaderInputStream
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.{ProcessBuilder => SProcessBuilder, ProcessLogger => SProcessLogger}
+import scala.sys.process.{ProcessBuilder => SProcessBuilder}
 
 /**
  * a job that runs as an external process
