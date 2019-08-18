@@ -9,7 +9,7 @@ import com.jakway.checkedshell.process.stream.StandardStreamWriters
 import org.apache.commons.io.input.ReaderInputStream
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.{ProcessLogger => SProcessLogger}
+import scala.sys.process.{ProcessLogger => SProcessLogger, ProcessBuilder => SProcessBuilder}
 
 /**
  * a job that runs as an external process
@@ -32,12 +32,32 @@ class Process(val processData: ProcessData,
     new ReaderInputStream(new StringReader(output.stdout), rc.charset)
   }
 
+  /**
+   * TODO: it would be better to build pipes more faithfully to the unix ideal:
+   * by connecting processes via streams instead of waiting until one process is done
+   * then vacuuming the entire output into a string, which is both less efficient
+   * and not a replacement for the intended behavior
+   * @param input
+   * @param rc
+   * @param ec
+   * @return
+   */
   override protected def runJob(input: Option[ProgramOutput])
                                (implicit rc: RunConfiguration,
                                          ec: ExecutionContext): JobOutput = {
     Future {
+      //connect stdin if available
+      val procWithConnectedInput: SProcessBuilder = {
+        input match {
+          case Some(i) => {
+            processData.nativeProcess #< programOutputToInputStream(i)
+          }
+          case None => processData.nativeProcess
+        }
+      }
+
       //block until exit
-      val exitCode: Int = processData.nativeProcess.!(
+      val exitCode: Int = procWithConnectedInput.!(
         SProcessLogger(standardStreamWriters.writeStdout,
           standardStreamWriters.writeStderr))
 
