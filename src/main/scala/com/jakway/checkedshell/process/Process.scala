@@ -1,16 +1,12 @@
 package com.jakway.checkedshell.process
 
-import java.io.File
-
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
-import com.jakway.checkedshell.process
 import com.jakway.checkedshell.process.Job.JobOutput
-import com.jakway.checkedshell.process.Process.NativeProcessType
 import com.jakway.checkedshell.process.stream.StandardStreamWriters
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
+import scala.sys.process.{ProcessLogger => SProcessLogger}
 
 /**
  * a job that runs as an external process
