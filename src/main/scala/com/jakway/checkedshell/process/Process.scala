@@ -68,7 +68,7 @@ class Process(val processData: ProcessData,
       val stdout = streamWriters.stdoutWriter.map(_.toString).getOrElse("")
       val stderr = streamWriters.stderrWriter.map(_.toString).getOrElse("")
 
-      if(rc.closeStreamsAfterExit) {
+      if(rc.streamsConfiguration.closeStreamsAfterExit) {
         closeAllStreams(rc)
         logger.debug("Streams closed")
       }
