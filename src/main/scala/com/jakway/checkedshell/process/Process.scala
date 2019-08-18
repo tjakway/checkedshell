@@ -14,7 +14,10 @@ import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
 
 /**
  * a job that runs as an external process
- * implements stream writes using a buffer logger by default
+ *
+ * @param standardStreamWriters need to take this as a parameter so we
+ *                              know which writers in processData.streamWriters
+ *                              to extract stdout and stderr from
  */
 class Process(val processData: ProcessData,
               private val standardStreamWriters: StandardStreamWriters)
