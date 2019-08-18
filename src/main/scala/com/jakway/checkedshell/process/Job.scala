@@ -1,7 +1,7 @@
 package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.data.{ProgramOutput, WithStreamWriters}
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
@@ -9,7 +9,9 @@ import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait Job {
+trait Job[A]
+  extends WithStreamWriters[A] {
+
   final def run(input: Option[ProgramOutput])
                (implicit runConfiguration: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {

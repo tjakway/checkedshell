@@ -3,13 +3,14 @@ package com.jakway.checkedshell.process
 import java.io.{InputStream, StringReader}
 
 import com.jakway.checkedshell.config.RunConfiguration
+import com.jakway.checkedshell.data.WithStreamWriters.StreamWriters
 import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.stream.StandardStreamWriters
 import org.apache.commons.io.input.ReaderInputStream
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.{ProcessLogger => SProcessLogger, ProcessBuilder => SProcessBuilder}
+import scala.sys.process.{ProcessBuilder => SProcessBuilder, ProcessLogger => SProcessLogger}
 
 /**
  * a job that runs as an external process
@@ -19,12 +20,18 @@ import scala.sys.process.{ProcessLogger => SProcessLogger, ProcessBuilder => SPr
  *                              to extract stdout and stderr from
  */
 class Process(val processData: ProcessData,
+              val streamWriters: StreamWriters,
               private val standardStreamWriters: StandardStreamWriters)
-  extends Job
+  extends Job[Process]
     with HasProcessData[Process] {
 
+  override protected def getStreamWriters: StreamWriters = streamWriters
+  override protected def copyWithStreamWriters(newStreamWriters: StreamWriters): Process =
+    new Process(processData, newStreamWriters, standardStreamWriters)
+
+
   override def copyWithProcessData(newProcessData: ProcessData): Process =
-    new Process(newProcessData, standardStreamWriters)
+    new Process(newProcessData, streamWriters, standardStreamWriters)
 
   private def programOutputToInputStream(output: ProgramOutput)
                                         (implicit rc: RunConfiguration): InputStream = {
