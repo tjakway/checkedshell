@@ -4,40 +4,40 @@ import java.io.{InputStream, StringReader}
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.WithStreamWriters.StreamWriters
-import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
+import com.jakway.checkedshell.data.{ProcessData, ProgramOutput, StreamWriters}
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.stream.StandardStreamWriters
 import org.apache.commons.io.input.ReaderInputStream
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{ProcessBuilder => SProcessBuilder, ProcessLogger => SProcessLogger}
 
 /**
  * a job that runs as an external process
- *
- * @param standardStreamWriters need to take this as a parameter so we
- *                              know which writers in processData.streamWriters
- *                              to extract stdout and stderr from
  */
 class Process(val processData: ProcessData,
-              val streamWriters: StreamWriters,
-              private val standardStreamWriters: StandardStreamWriters)
+              val streamWriters: StreamWriters)
   extends Job[Process]
     with HasProcessData[Process] {
 
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
+
   override protected def getStreamWriters: StreamWriters = streamWriters
   override protected def copyWithStreamWriters(newStreamWriters: StreamWriters): Process =
-    new Process(processData, newStreamWriters, standardStreamWriters)
+    new Process(processData, newStreamWriters)
 
 
   override def copyWithProcessData(newProcessData: ProcessData): Process =
-    new Process(newProcessData, streamWriters, standardStreamWriters)
+    new Process(newProcessData, streamWriters)
 
   private def programOutputToInputStream(output: ProgramOutput)
                                         (implicit rc: RunConfiguration): InputStream = {
 
     new ReaderInputStream(new StringReader(output.stdout), rc.charset)
   }
+
+
 
   /**
    * TODO: it would be better to build pipes more faithfully to the unix ideal:
@@ -64,14 +64,15 @@ class Process(val processData: ProcessData,
       }
 
       //block until exit
-      val exitCode: Int = procWithConnectedInput.!(
-        SProcessLogger(standardStreamWriters.writeStdout,
-          standardStreamWriters.writeStderr))
+      val exitCode: Int = procWithConnectedInput.!(streamWriters.toProcessLogger)
 
-      val stdout = standardStreamWriters.stdoutWriter.toString
-      val stderr = standardStreamWriters.stderrWriter.toString
+      val stdout = streamWriters.stdoutWriter.map(_.toString).getOrElse("")
+      val stderr = streamWriters.stderrWriter.map(_.toString).getOrElse("")
 
-      closeAllStreams(processData)
+      if(rc.closeStreamsAfterExit) {
+        closeAllStreams(processData)
+        logger.debug("Streams closed")
+      }
 
       new ProgramOutput(exitCode, stdout, stderr)
     }

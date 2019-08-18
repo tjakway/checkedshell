@@ -1,11 +1,9 @@
 package com.jakway.checkedshell.data
 
-import java.io.Writer
-
-import com.jakway.checkedshell.data.WithStreamWriters.StreamWriters
 import org.slf4j.{Logger, LoggerFactory}
 
-trait WithStreamWriters[A] {
+
+trait HasStreamWriters[A] {
   private val logger: Logger = LoggerFactory.getLogger(getClass())
 
   protected def getStreamWriters: StreamWriters
@@ -18,7 +16,8 @@ trait WithStreamWriters[A] {
    */
   def addStreamWriters(additionalWriters: StreamWriters): A = {
     val streamWriters = getStreamWriters
-    val res = additionalWriters.foldLeft(streamWriters) {
+    val streamWritersMap = streamWriters.streamWritersMap
+    val resMap = additionalWriters.streamWritersMap.foldLeft(streamWritersMap) {
       case (acc, (descriptor, theseWriters)) => {
         val currentWriters = acc.getOrElse(descriptor, Seq.empty)
         val newWriters = currentWriters ++ theseWriters
@@ -30,10 +29,7 @@ trait WithStreamWriters[A] {
       }
     }
 
+    val res = streamWriters.copy(streamWritersMap = resMap)
     copyWithStreamWriters(res)
   }
-}
-
-object WithStreamWriters {
-  type StreamWriters = Map[JobOutputStream, Seq[Writer]]
 }
