@@ -1,10 +1,10 @@
-package com.jakway.checkedshell.process
+package com.jakway.checkedshell.process.stream
 
 import java.io.Writer
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.StreamWriters.StreamWriterMap
-import com.jakway.checkedshell.data.{HasStreamWriters, JobOutputStream, StreamWriters}
+import com.jakway.checkedshell.data.{HasStreamWriters, JobOutputStream}
 
 trait Redirectable[A] extends HasStreamWriters[A] {
 
@@ -45,5 +45,4 @@ trait Redirectable[A] extends HasStreamWriters[A] {
     val newSw = sw.copy(streamWritersMap = newWriterMap)
     copyWithStreamWriters(newSw)
   }
-
 }
