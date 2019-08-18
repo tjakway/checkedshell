@@ -2,7 +2,7 @@ package com.jakway.checkedshell.process
 
 import java.io.File
 
-import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.data.{ProcessData, ProgramOutput}
 import com.jakway.checkedshell.process
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.Process.NativeProcessType
@@ -10,25 +10,12 @@ import com.jakway.checkedshell.process.Process.NativeProcessType
 import scala.concurrent.{ExecutionContext, Future}
 import scala.sys.process.{Process => SProcess, ProcessLogger => SProcessLogger}
 
-trait StdoutStreamWriter {
-  def onStdoutWrite(s: String): Unit
-  def getStdout(): String
-}
-
-trait StderrStreamWriter {
-  def onStderrWrite(s: String): Unit
-  def getStderr(): String
-}
-
 /**
  * a job that runs as an external process
  * implements stream writes using a buffer logger by default
- * @param nativeProc
  */
-class Process(val nativeProc: NativeProcessType)
-  extends Job
-    with StdoutStreamWriter
-    with StderrStreamWriter {
+class Process(val processData: ProcessData)
+  extends Job {
 
   lazy val bufLogger = new process.Process.BufLogger() {}
   override def onStdoutWrite(s: String): Unit = bufLogger.stdoutBuf.append(s)
