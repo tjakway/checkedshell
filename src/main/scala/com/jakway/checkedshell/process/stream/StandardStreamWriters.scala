@@ -3,7 +3,7 @@ package com.jakway.checkedshell.process.stream
 import java.io.StringWriter
 
 import com.jakway.checkedshell.data.StreamWriters.StreamWriterMap
-import com.jakway.checkedshell.data.{ProcessData, StandardJobOutputStream, StreamWriters}
+import com.jakway.checkedshell.data.{ProcessData, StandardJobOutputDescriptor, StreamWriters}
 
 class StandardStreamWriters(val initialSize: Int =
                               StandardStreamWriters.defaultInitialSize) {
@@ -22,8 +22,8 @@ class StandardStreamWriters(val initialSize: Int =
   def writeStderr: String => Unit = writeStringWriter(stderrWriter)
 
   val writerMap: StreamWriterMap = Map {
-    StandardJobOutputStream.Stdout -> Seq(stdoutWriter)
-    StandardJobOutputStream.Stderr -> Seq(stderrWriter)
+    StandardJobOutputDescriptor.Stdout -> Seq(stdoutWriter)
+    StandardJobOutputDescriptor.Stderr -> Seq(stderrWriter)
   }
 
   val streamWriters: StreamWriters = StreamWriters(

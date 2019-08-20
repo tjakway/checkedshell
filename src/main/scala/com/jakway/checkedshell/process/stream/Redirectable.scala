@@ -4,16 +4,16 @@ import java.io.Writer
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.StreamWriters.StreamWriterMap
-import com.jakway.checkedshell.data.{HasStreamWriters, JobOutputStream}
+import com.jakway.checkedshell.data.{HasStreamWriters, JobOutputDescriptor}
 import com.jakway.checkedshell.error.cause.CloseStreamError
 
 trait Redirectable[A] extends HasStreamWriters[A] {
 
-  type AlterF = StreamWriterMap => JobOutputStream => Writer => StreamWriterMap
+  type AlterF = StreamWriterMap => JobOutputDescriptor => Writer => StreamWriterMap
 
   private object AlterFunctions {
     private def composeAlterFunctions: AlterF => AlterF => AlterF = (left: AlterF) => (right: AlterF) =>
-      (swMap: StreamWriterMap) => (descriptor: JobOutputStream) => (writer: Writer) => {
+      (swMap: StreamWriterMap) => (descriptor: JobOutputDescriptor) => (writer: Writer) => {
 
         //compositions go right-to-left
         val rightRes = right(swMap)(descriptor)(writer)
@@ -31,11 +31,11 @@ trait Redirectable[A] extends HasStreamWriters[A] {
     }
 
     private def conditionalAlterFunction(
-                condition: StreamWriterMap => JobOutputStream => Writer => Boolean,
-                ifTrue: AlterF,
-                otherwise: AlterF): AlterF = {
+                                          condition: StreamWriterMap => JobOutputDescriptor => Writer => Boolean,
+                                          ifTrue: AlterF,
+                                          otherwise: AlterF): AlterF = {
 
-      (swMap: StreamWriterMap) => (descriptor: JobOutputStream) => (writer: Writer) => {
+      (swMap: StreamWriterMap) => (descriptor: JobOutputDescriptor) =>(writer: Writer) => {
         if(condition(swMap)(descriptor)(writer)) {
           ifTrue(swMap)(descriptor)(writer)
         } else {
@@ -44,8 +44,8 @@ trait Redirectable[A] extends HasStreamWriters[A] {
       }
     }
 
-    private def writerIsNullCondition: StreamWriterMap => JobOutputStream => Writer => Boolean = {
-      (swMap: StreamWriterMap) => (descriptor: JobOutputStream) => (writer: Writer) => {
+    private def writerIsNullCondition: StreamWriterMap => JobOutputDescriptor => Writer => Boolean = {
+      (swMap: StreamWriterMap) => (descriptor: JobOutputDescriptor) =>(writer: Writer) => {
         writer == null
       }
     }
@@ -55,7 +55,7 @@ trait Redirectable[A] extends HasStreamWriters[A] {
      * @return
      */
     def closeStreamsF: AlterF =
-      (swMap: StreamWriterMap) => (descriptor: JobOutputStream) => (writer: Writer) => {
+      (swMap: StreamWriterMap) => (descriptor: JobOutputDescriptor) => (writer: Writer) => {
         swMap
           .get(descriptor)
           .foreach { writers =>
@@ -76,7 +76,7 @@ trait Redirectable[A] extends HasStreamWriters[A] {
      * @return
      */
     private def doNothingF: AlterF =
-      (swMap: StreamWriterMap) => (descriptor: JobOutputStream) => (writer: Writer) => {
+      (swMap: StreamWriterMap) => (descriptor: JobOutputDescriptor) => (writer: Writer) => {
         swMap
       }
 
@@ -95,7 +95,7 @@ trait Redirectable[A] extends HasStreamWriters[A] {
     }
   }
 
-  protected def closeStreams(forDescriptor: JobOutputStream)
+  protected def closeStreams(forDescriptor: JobOutputDescriptor)
                             (implicit rc: RunConfiguration): A = {
     val sw = getStreamWriters
     val newMap = AlterFunctions.closeStreamsF(sw.streamWritersMap)(forDescriptor)(null)
@@ -104,7 +104,7 @@ trait Redirectable[A] extends HasStreamWriters[A] {
   }
 
 
-  protected def alterStreams(newDescriptor: JobOutputStream,
+  protected def alterStreams(newDescriptor: JobOutputDescriptor,
                              newWriter: Writer)
                             (implicit rc: RunConfiguration): A = {
     val sw = getStreamWriters

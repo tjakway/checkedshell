@@ -12,20 +12,20 @@ case class StreamWriters(stdoutWriter: Option[Writer],
 
   def toProcessLogger: SProcessLogger = {
     //look up writers in the map and write the data to all of them
-    def writeKeyedWriter: JobOutputStream => String => Unit = key => data => {
+    def writeKeyedWriter: JobOutputDescriptor => String => Unit = key => data => {
       streamWritersMap.get(key).foreach { writers =>
         val cs: CharSequence = data
         writers.foreach(_.append(cs))
       }
     }
 
-    def writeStdout = writeKeyedWriter(StandardJobOutputStream.Stdout)
-    def writeStderr = writeKeyedWriter(StandardJobOutputStream.Stderr)
+    def writeStdout = writeKeyedWriter(StandardJobOutputDescriptor.Stdout)
+    def writeStderr = writeKeyedWriter(StandardJobOutputDescriptor.Stderr)
 
     SProcessLogger(writeStdout, writeStderr)
   }
 }
 
 object StreamWriters {
-  type StreamWriterMap = Map[JobOutputStream, Seq[Writer]]
+  type StreamWriterMap = Map[JobOutputDescriptor, Seq[Writer]]
 }

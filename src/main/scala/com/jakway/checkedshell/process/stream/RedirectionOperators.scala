@@ -3,11 +3,11 @@ package com.jakway.checkedshell.process.stream
 import java.io.{BufferedWriter, File, FileWriter}
 
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.{JobOutputStream, StandardJobOutputStream}
+import com.jakway.checkedshell.data.{JobOutputDescriptor, StandardJobOutputDescriptor}
 import com.jakway.checkedshell.process.stream.RedirectionOperators.{DevNull, SpecialFile}
 
 trait RedirectionOperators[A] extends Redirectable[A] {
-  def redirectToFile(descriptor: JobOutputStream,
+  def redirectToFile(descriptor: JobOutputDescriptor,
                      to: File)
                     (implicit rc: RunConfiguration): A = {
 
@@ -15,7 +15,7 @@ trait RedirectionOperators[A] extends Redirectable[A] {
     alterStreams(descriptor, writer)
   }
 
-  private def handleSpecialFile(descriptor: JobOutputStream,
+  private def handleSpecialFile(descriptor: JobOutputDescriptor,
                                 specialFile: SpecialFile)
                                (implicit rc: RunConfiguration): A = {
     specialFile match {
@@ -24,16 +24,16 @@ trait RedirectionOperators[A] extends Redirectable[A] {
   }
 
   def `1>`(to: File)(implicit rc: RunConfiguration): Unit =
-    redirectToFile(StandardJobOutputStream.Stdout, to)
+    redirectToFile(StandardJobOutputDescriptor.Stdout, to)
 
   def `2>`(to: File)(implicit rc: RunConfiguration): Unit =
-    redirectToFile(StandardJobOutputStream.Stderr, to)
+    redirectToFile(StandardJobOutputDescriptor.Stderr, to)
 
   def `1>`(to: SpecialFile)(implicit rc: RunConfiguration): Unit =
-    handleSpecialFile(StandardJobOutputStream.Stdout, to)
+    handleSpecialFile(StandardJobOutputDescriptor.Stdout, to)
 
   def `2>`(to: SpecialFile)(implicit rc: RunConfiguration): Unit =
-    handleSpecialFile(StandardJobOutputStream.Stderr, to)
+    handleSpecialFile(StandardJobOutputDescriptor.Stderr, to)
 }
 
 object RedirectionOperators {
