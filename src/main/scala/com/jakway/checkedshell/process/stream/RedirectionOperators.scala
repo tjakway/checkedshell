@@ -23,17 +23,23 @@ trait RedirectionOperators[A] extends Redirectable[A] {
     }
   }
 
-  def `1>`(to: File)(implicit rc: RunConfiguration): Unit =
+  def `1>`(to: File)(implicit rc: RunConfiguration): A =
     redirectToFile(StandardJobOutputDescriptor.Stdout, to)
 
-  def `2>`(to: File)(implicit rc: RunConfiguration): Unit =
+  def `2>`(to: File)(implicit rc: RunConfiguration): A =
     redirectToFile(StandardJobOutputDescriptor.Stderr, to)
 
-  def `1>`(to: SpecialFile)(implicit rc: RunConfiguration): Unit =
+  def `1>`(to: SpecialFile)(implicit rc: RunConfiguration): A =
     handleSpecialFile(StandardJobOutputDescriptor.Stdout, to)
 
-  def `2>`(to: SpecialFile)(implicit rc: RunConfiguration): Unit =
+  def `2>`(to: SpecialFile)(implicit rc: RunConfiguration): A =
     handleSpecialFile(StandardJobOutputDescriptor.Stderr, to)
+
+  def `1>`(to: JobOutputDescriptor)(implicit rc: RunConfiguration): A =
+    copyDescriptor(StandardJobOutputDescriptor.Stdout, to)
+
+  def `2>`(to: JobOutputDescriptor)(implicit rc: RunConfiguration): A =
+    copyDescriptor(StandardJobOutputDescriptor.Stderr, to)
 }
 
 object RedirectionOperators {

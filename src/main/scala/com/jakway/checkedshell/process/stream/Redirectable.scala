@@ -6,8 +6,10 @@ import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.StreamWriters.StreamWriterMap
 import com.jakway.checkedshell.data.{HasStreamWriters, JobOutputDescriptor}
 import com.jakway.checkedshell.error.cause.CloseStreamError
+import org.slf4j.{Logger, LoggerFactory}
 
 trait Redirectable[A] extends HasStreamWriters[A] {
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   type AlterF = StreamWriterMap => JobOutputDescriptor => Writer => StreamWriterMap
 
@@ -114,5 +116,31 @@ trait Redirectable[A] extends HasStreamWriters[A] {
 
     val newSw = sw.copy(streamWritersMap = newWriterMap)
     copyWithStreamWriters(newSw)
+  }
+
+  /**
+   * will copy (not replace) writers associated with src to dest
+   * @param src
+   * @param dest
+   * @return
+   */
+  protected def copyDescriptor(src: JobOutputDescriptor,
+                               dest: JobOutputDescriptor): A = {
+    val sw = getStreamWriters
+    val swMap = sw.streamWritersMap
+
+    swMap.get(dest) match {
+      case Some(writersToAdd) => {
+        val currentWriters = swMap.getOrElse(src, Seq.empty)
+        val newWriters = currentWriters ++ writersToAdd
+        copyWithStreamWriters(sw.copy(streamWritersMap = swMap.updated(dest, newWriters)))
+      }
+      case None => {
+        logger.warn(s"copyDescriptor called with src=$src dest=$dest" +
+          s" but dest was not found in underling StreamWritersMap: $swMap")
+        //return self
+        copyWithStreamWriters(sw)
+      }
+    }
   }
 }
