@@ -2,35 +2,34 @@ package com.jakway.checkedshell.common
 
 import java.util.Formatter
 
-import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.{ProgramOutput, StreamWriters}
-import com.jakway.checkedshell.process.{Job, Task}
-import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
+import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.process.Job.RunJobF
+import com.jakway.checkedshell.process.Task
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class Echo(val printTrailingNewLine: Boolean)
   extends Task {
-  override def runJob: RunJobF = Echo(printTrailingNewLine)
+  override def runJob: RunJobF = Echo.apply(printTrailingNewLine)
 }
 
 object Echo {
-  def apply(printTrailingNewLine: Boolean)
-           (optInput: Option[ProgramOutput])(rc: RunConfiguration,
-                                             ec: ExecutionContext): JobOutput =
+  def apply: Boolean => RunJobF = printTrailingNewLine => optInput => (pRc, pEc) => {
+    implicit val ec = pEc
     Future {
       val fmt: Formatter = new Formatter()
 
       optInput.foreach { input =>
-        if(!input.stdout.isEmpty) {
+        if (!input.stdout.isEmpty) {
           fmt.format("%s", input.stdout)
         }
       }
 
-      if(printTrailingNewLine) {
+      if (printTrailingNewLine) {
         fmt.format("\n")
       } else {}
 
       new ProgramOutput(0, toString, "")
+    }
   }
 }
