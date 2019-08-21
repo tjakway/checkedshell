@@ -11,7 +11,8 @@ libraryDependencies ++=
 
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
       "org.scalactic" %% "scalactic" % "3.0.8" % "test",
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test")
+      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
+      "org.scalatestplus" % "scalatestplus-scalacheck_2.12" % "1.0.0-SNAP8")
 
 mainClass in assembly := Some("com.jakway.Main")
 
