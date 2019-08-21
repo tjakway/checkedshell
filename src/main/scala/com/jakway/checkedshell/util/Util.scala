@@ -1,4 +1,4 @@
-package com.jakway.checkedshell
+package com.jakway.checkedshell.util
 
 import java.io.{PrintWriter, StringWriter}
 

@@ -2,8 +2,8 @@ package com.jakway.checkedshell.error.behavior
 
 import java.util.Formatter
 
-import com.jakway.checkedshell.Util
 import com.jakway.checkedshell.error.ErrorData
+import com.jakway.checkedshell.util.Util
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
