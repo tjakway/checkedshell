@@ -3,6 +3,7 @@ package com.jakway.checkedshell.data
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.{CloseStreamError, CloseStreamErrors}
+import com.jakway.checkedshell.process.stream.StandardStreamWriters
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.util.{Failure, Success, Try}
@@ -65,4 +66,8 @@ trait HasStreamWriters[+A] {
     val errorData: ErrorData = ErrorData(Some("Stream close errors"), combinedError)
     rc.errorBehavior.handleError(errorData)
   }
+}
+
+object HasStreamWriters {
+  val defaultStreamWriters: StreamWriters = new StandardStreamWriters().streamWriters
 }

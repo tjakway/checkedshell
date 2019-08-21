@@ -6,11 +6,13 @@ import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
 import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
+import com.jakway.checkedshell.process.stream.RedirectionOperators
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Job
-  extends HasStreamWriters[Job] {
+  extends HasStreamWriters[Job]
+    with RedirectionOperators[Job] {
 
   final def run(input: Option[ProgramOutput])
                (implicit runConfiguration: RunConfiguration,
