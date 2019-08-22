@@ -17,8 +17,6 @@ class EchoProperties
     with ScalaCheckPropertyChecks
     with Matchers {
 
-  val genStr = Gen.alphaNumStr
-
   property("flatMap pipes properly") {
     forAll(Gen.alphaNumStr) { (str: String) =>
       val future = TaskJob(new Echo(false, Seq(str)))
