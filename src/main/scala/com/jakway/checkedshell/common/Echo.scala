@@ -11,34 +11,49 @@ import scala.concurrent.{ExecutionContext, Future}
 
 //TODO: rewrite to actually behave like echo...
 //i.e. don't read from standard input, take args in the constructor and print them
-class Echo(val printTrailingNewLine: Boolean = true, val args: Seq[Object])
+class Echo(val printTrailingNewLine: Boolean = Echo.defaultPrintTrailingNewLine,
+           val args: Seq[Object] = Seq())
   extends Task {
-  override def runJob: RunJobF = Echo.apply(printTrailingNewLine)(args)
-
-  def this(printTrailingNewLine: Boolean, args: String*) {
-    this(printTrailingNewLine, args)
-  }
+  override def runJob: RunJobF = Echo.echo(printTrailingNewLine)(args)
 }
 
 object Echo {
-  def apply: Boolean => Seq[Object] => RunJobF = printTrailingNewLine => optInput =>
-    (pRc: RunConfiguration, pEc: ExecutionContext) => {
+  val argSeparator: String = " "
+  val defaultPrintTrailingNewLine: Boolean = true
 
-    implicit val ec = pEc
-    Future {
-      val fmt: Formatter = new Formatter()
+  /**
+   * variadic constructor
+   * @param printTrailingNewLine
+   * @param args
+   * @return
+   */
+  def apply(printTrailingNewLine: Boolean,
+            args: String*): Echo = new Echo(printTrailingNewLine, args)
 
-      optInput.foreach { input =>
-        if (!input.stdout.isEmpty) {
-          fmt.format("%s", input.stdout)
+  private def echo: Boolean => Seq[Object] => RunJobF =
+    printTrailingNewLine => (args: Seq[Object]) => optInput =>
+    (pRc: RunConfiguration) => (pEc: ExecutionContext) => {
+
+      //optInput is ignored (echo doesn't care about stdin)
+
+      implicit val ec: ExecutionContext = pEc
+      Future {
+        val fmt: Formatter = new Formatter()
+
+        //print each argument with a space between them
+        args.headOption.foreach { head =>
+          fmt.format("%s", head)
         }
+
+        args.tail.foreach { tail =>
+          fmt.format("%s%s", argSeparator, tail)
+        }
+
+        if (printTrailingNewLine) {
+          fmt.format("\n")
+        } else {}
+
+        new ProgramOutput(0, toString, "")
       }
-
-      if (printTrailingNewLine) {
-        fmt.format("\n")
-      } else {}
-
-      new ProgramOutput(0, toString, "")
-    }
   }
 }
