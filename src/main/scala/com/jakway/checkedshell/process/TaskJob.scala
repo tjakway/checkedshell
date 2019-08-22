@@ -10,7 +10,7 @@ case class TaskJob(task: Task,
   extends Job {
   override protected def runJob(input: Option[ProgramOutput])
                                (implicit rc: RunConfiguration,
-                                ec: ExecutionContext): JobOutput = task.runJob(input)(rc, ec)
+                                ec: ExecutionContext): JobOutput = task.runJob(input)(rc)(ec)
 
   override protected def getStreamWriters: StreamWriters = streamWriters
 

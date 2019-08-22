@@ -66,7 +66,7 @@ trait Job
 
     //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
     def g: RunJobF =
-      a => (rc: RunConfiguration, ec: ExecutionContext) => newRunJob(a)(rc, ec)
+      a => (rc: RunConfiguration) => (ec: ExecutionContext) => newRunJob(a)(rc, ec)
     copyWithNewRunJob(g)
   }
 
@@ -81,7 +81,7 @@ trait Job
 
     //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
     def g: RunJobF =
-      a => (rc: RunConfiguration, ec: ExecutionContext) => newRunJob(a)(rc, ec)
+      a => (rc: RunConfiguration) => (ec: ExecutionContext) => newRunJob(a)(rc, ec)
     copyWithNewRunJob(g)
   }
 }
@@ -89,7 +89,7 @@ trait Job
 object Job {
   type JobOutput = Future[ProgramOutput]
   type RunJobF = Option[ProgramOutput] =>
-                  (RunConfiguration, ExecutionContext) =>
+                  RunConfiguration => ExecutionContext =>
                     JobOutput
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)

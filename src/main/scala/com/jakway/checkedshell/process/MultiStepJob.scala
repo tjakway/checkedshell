@@ -13,7 +13,7 @@ class MultiStepJob[A](val runJobF: Job.RunJobF,
   protected def runJob(input: Option[ProgramOutput])
                       (implicit rc: RunConfiguration,
                                 ec: ExecutionContext): JobOutput =
-    runJobF(input)(rc, ec)
+    runJobF(input)(rc)(ec)
 
   override protected def getStreamWriters: StreamWriters = streamWriters
 
