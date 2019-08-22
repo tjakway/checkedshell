@@ -10,7 +10,7 @@ import org.apache.commons.io.input.ReaderInputStream
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.sys.process.{ProcessBuilder => SProcessBuilder}
+import scala.sys.process.{ProcessBuilder => SProcessBuilder, Process => SProcess}
 
 /**
  * a job that runs as an external process
@@ -87,6 +87,16 @@ object Process {
       processData,
       standardStreamWriters.streamWriters)
   }
+
+  def processWithStandardStreams(proc: SProcessBuilder): Process = {
+    processWithStandardStreams(ProcessData(proc))
+  }
+
+  def apply(program: String, args: Seq[String]): Process =
+    processWithStandardStreams(SProcess(program, args))
+
+  def apply(toRun: Seq[String]): Process =
+    processWithStandardStreams(SProcess(toRun))
 
   //TODO: add more factory methods (apply)
 }
