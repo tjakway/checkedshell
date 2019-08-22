@@ -7,10 +7,8 @@ import com.jakway.checkedshell.test.framework.HasDefaultTestConfig
 import com.jakway.checkshell.test.framework.WithJobOutputMatcher
 import org.scalacheck.Gen
 import org.scalatest.Matchers
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.propspec.AnyPropSpec
-
-import scala.concurrent.Await
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 class EchoProperties
   extends AnyPropSpec
