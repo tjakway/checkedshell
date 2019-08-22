@@ -84,6 +84,23 @@ trait Job
       a => (rc: RunConfiguration) => (ec: ExecutionContext) => newRunJob(a)(rc, ec)
     copyWithNewRunJob(g)
   }
+
+  def flatMap(toOtherJob: Job): Job = {
+    def newRunFunction: RunJobF =
+      (input: Option[ProgramOutput]) =>
+      (rc: RunConfiguration) =>
+      (ec: ExecutionContext) => {
+        //run our job first, then the passed job
+        val firstJob: Job = this
+        val secondJob: Job = toOtherJob
+        firstJob.runJob(input)(rc, ec)
+          .flatMap { firstJobRes =>
+            secondJob.runJob(Some(firstJobRes))(rc, ec)
+          }(ec)
+      }
+
+     copyWithNewRunJob(newRunFunction)
+  }
 }
 
 object Job {
