@@ -23,7 +23,7 @@ class JobProperties
       val future = TaskJob(new Echo(false, Seq(str)))
         .run(None)
 
-      Await.result(future, getTestConfig.futureTimeOut)
+      Await.result(future, getTestConfig.futureTimeOut).stdout shouldEqual str
     }
   }
 }
