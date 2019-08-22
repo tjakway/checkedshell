@@ -41,6 +41,8 @@ object Echo {
         val fmt: Formatter = new Formatter()
 
         //print each argument with a space between them
+        //always call fmt.format with a format string in case the
+        //args themselves contain format sequences
         args.headOption.foreach { head =>
           fmt.format("%s", head)
         }
