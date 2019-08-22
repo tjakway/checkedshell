@@ -3,16 +3,22 @@ package com.jakway.checkedshell.test.framework
 import com.jakway.checkedshell.config.RunConfiguration
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
 
-case class TestConfig(rc: RunConfiguration,
+case class TestConfig(futureTimeOut: Duration,
+                      rc: RunConfiguration,
                       ec: ExecutionContext)
 
 object TestConfig {
+  val defaultFutureTimeOut: Duration =
+    Duration(5, scala.concurrent.duration.SECONDS)
+
   val default: TestConfig = {
     val rc = RunConfiguration.default
     val ec = scala.concurrent.ExecutionContext.global
 
-    TestConfig(rc, ec)
+    TestConfig(defaultFutureTimeOut,
+      rc, ec)
   }
 }
 

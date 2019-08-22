@@ -8,6 +8,8 @@ import org.scalatest.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalatest.propspec.AnyPropSpec
 
+import scala.concurrent.Await
+
 class JobProperties
   extends AnyPropSpec
     with HasDefaultTestConfig
@@ -18,8 +20,10 @@ class JobProperties
 
   property("flatMap pipes properly") {
     forAll(Gen.alphaNumStr) { (str: String) =>
-      TaskJob(new Echo(false, Seq(str)))
+      val future = TaskJob(new Echo(false, Seq(str)))
         .run(None)
+
+      Await.result(future, getTestConfig.futureTimeOut)
     }
   }
 }
