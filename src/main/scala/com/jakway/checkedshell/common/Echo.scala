@@ -53,7 +53,7 @@ object Echo {
           fmt.format("\n")
         } else {}
 
-        new ProgramOutput(0, toString, "")
+        new ProgramOutput(0, fmt.toString, "")
       }
   }
 }
