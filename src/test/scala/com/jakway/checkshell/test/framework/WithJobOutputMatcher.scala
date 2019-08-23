@@ -1,5 +1,7 @@
 package com.jakway.checkshell.test.framework
 
+import java.util.regex.Pattern
+
 import com.jakway.checkedshell.data.ProgramOutput
 import com.jakway.checkedshell.test.framework.HasTestConfig
 
@@ -20,4 +22,14 @@ trait WithJobOutputMatcher extends HasTestConfig {
       expectedStdout,
       expectedStderr,
       getTestConfig.futureTimeOut)
+
+  def matchJobOutputRegex(expectedExitCode: Option[Pattern],
+                          expectedStdoutRegex: Option[Pattern],
+                          expectedStderrRegex: Option[Pattern]): JobOutputVerifier =
+    new JobOutputRegexMatcher(
+      expectedExitCode,
+      expectedStdoutRegex,
+      expectedStderrRegex,
+      getTestConfig.futureTimeOut)
+
 }
