@@ -5,7 +5,7 @@ import com.jakway.checkedshell.data.{HasStreamWriters, ProgramOutput}
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
+import com.jakway.checkedshell.process.Job.{JobInfo, JobOutput, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -13,6 +13,8 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
+
+  def getJobInfo(): JobInfo = JobInfo.default
 
   final def run(input: Option[ProgramOutput])
                (implicit runConfiguration: RunConfiguration,
@@ -110,4 +112,14 @@ object Job {
                     JobOutput
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
+
+  //JobInfo monoid
+  class JobInfo(val processNames: Seq[String])
+
+  object JobInfo {
+    val default: JobInfo = new JobInfo(Seq())
+  }
+
+  private def combineJobInfo(left: JobInfo, right: JobInfo): JobInfo =
+    new JobInfo(left.processNames ++ right.processNames)
 }
