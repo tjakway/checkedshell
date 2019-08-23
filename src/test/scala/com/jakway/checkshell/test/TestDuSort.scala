@@ -1,5 +1,7 @@
 package com.jakway.checkshell.test
 
+import java.util.regex.Pattern
+
 import com.jakway.checkedshell.process.{Job, Process}
 import com.jakway.checkedshell.test.framework.HasDefaultTestConfig
 import com.jakway.checkedshell.util.SearchPath
@@ -32,6 +34,14 @@ class TestDuSort
   it should "have identical output across runs" in {
     val firstRunRes = getProgramOutput(jobToTest.run(None))
     jobToTest.run(None) should matchJobOutput(firstRunRes)
+  }
+
+  it should "have non-empty stdout" in {
+    import com.jakway.checkshell.test.framework.JobOutputRegexMatcher.CommonPatterns._
+    jobToTest.run(None) should matchJobOutputRegex(
+      0,
+      matchNonWhitespace,
+      matchWhitespaceOrEmpty)
   }
 }
 

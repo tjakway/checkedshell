@@ -32,4 +32,12 @@ trait WithJobOutputMatcher extends HasTestConfig {
       expectedStderrRegex,
       getTestConfig.futureTimeOut)
 
+  def matchJobOutputRegex(expectedExitCode: Int,
+                          expectedStdoutRegex: Pattern,
+                          expectedStderrRegex: Pattern): JobOutputMatcher =
+    matchJobOutputRegex(
+      Some(Pattern.compile(expectedExitCode.toString)),
+      Some(expectedStdoutRegex),
+      Some(expectedStderrRegex))
+
 }

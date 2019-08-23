@@ -21,14 +21,22 @@ class JobOutputRegexMatcher(val expectedExitCode: Option[Pattern],
 }
 
 object JobOutputRegexMatcher {
-  //alternatively could just use the matchAllPattern in case of None
-  //lazy val matchAllPattern: Pattern = Pattern.compile(""".*""")
+
+  /**
+   * note: these patterns all match the entire line
+   */
+  object CommonPatterns {
+    lazy val matchAllPattern: Pattern = Pattern.compile("""^.*$""")
+    lazy val matchWhitespaceOrEmpty: Pattern = Pattern.compile("""^\s*$""")
+    lazy val matchNonWhitespace: Pattern = Pattern.compile("""^[^\s]+$""")
+  }
 
   def errMsg[A](actual: A, pattern: Pattern, fieldName: String): String = {
     s"Expected $fieldName to match regex ${pattern.pattern()} " +
       s"but $actual does not match"
   }
 
+  //alternatively could just use the matchAllPattern in case of None
   def checkRegex[A](actual: A, optPattern: Option[Pattern], fieldName: String): Seq[String] = {
     optPattern match {
       case Some(pattern) => {
