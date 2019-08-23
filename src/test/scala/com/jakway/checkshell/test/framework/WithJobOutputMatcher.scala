@@ -6,7 +6,7 @@ import com.jakway.checkedshell.data.ProgramOutput
 import com.jakway.checkedshell.test.framework.HasTestConfig
 
 trait WithJobOutputMatcher extends HasTestConfig {
-  def matchJobOutput(expected: ProgramOutput): JobOutputEqualityMatcher =
+  def matchJobOutput(expected: ProgramOutput): JobOutputMatcher =
     //unroll fields
     new JobOutputEqualityMatcher(
       Some(expected.exitCode),
@@ -16,7 +16,7 @@ trait WithJobOutputMatcher extends HasTestConfig {
 
   def matchJobOutput(expectedExitCode: Option[Int],
                      expectedStdout: Option[String],
-                     expectedStderr: Option[String]): JobOutputEqualityMatcher =
+                     expectedStderr: Option[String]): JobOutputMatcher =
     new JobOutputEqualityMatcher(
       expectedExitCode,
       expectedStdout,
@@ -25,7 +25,7 @@ trait WithJobOutputMatcher extends HasTestConfig {
 
   def matchJobOutputRegex(expectedExitCode: Option[Pattern],
                           expectedStdoutRegex: Option[Pattern],
-                          expectedStderrRegex: Option[Pattern]): JobOutputVerifier =
+                          expectedStderrRegex: Option[Pattern]): JobOutputMatcher =
     new JobOutputRegexMatcher(
       expectedExitCode,
       expectedStdoutRegex,

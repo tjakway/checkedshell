@@ -6,7 +6,7 @@ class JobOutputEqualityMatcher(val expectedExitCode: Option[Int],
                                val expectedStdout: Option[String],
                                val expectedStderr: Option[String],
                                override val timeout: Duration)
-  extends JobOutputVerifier(timeout) {
+  extends JobOutputMatcher(timeout) {
   import JobOutputEqualityMatcher._
 
   override protected def checkExitCode(exitCode: Int): Seq[String] =

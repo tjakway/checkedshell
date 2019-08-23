@@ -8,7 +8,7 @@ class JobOutputRegexMatcher(val expectedExitCode: Option[Pattern],
                             val expectedStdoutRegex: Option[Pattern],
                             val expectedStderrRegex: Option[Pattern],
                             override val timeout: Duration)
-  extends JobOutputVerifier(timeout) {
+  extends JobOutputMatcher(timeout) {
   import JobOutputRegexMatcher._
 
   override protected def checkExitCode(exitCode: Int): Seq[String] =

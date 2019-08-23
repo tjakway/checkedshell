@@ -11,7 +11,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 //TODO: eliminate duplication with GetProgramOutput
-abstract class JobOutputVerifier(val timeout: Duration)
+abstract class JobOutputMatcher(val timeout: Duration)
   extends Matcher[JobOutput] {
 
   //return Seq of error messages on failure
