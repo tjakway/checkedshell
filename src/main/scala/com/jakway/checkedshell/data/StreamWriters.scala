@@ -15,7 +15,7 @@ case class StreamWriters(stdoutWriter: Option[Writer],
     def writeKeyedWriter: JobOutputDescriptor => String => Unit = key => data => {
       streamWritersMap.get(key).foreach { writers =>
         val cs: CharSequence = data
-        writers.foreach(_.append(cs))
+        writers.foreach(_.append(cs + System.lineSeparator()))
       }
     }
 
