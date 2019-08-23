@@ -95,6 +95,9 @@ object Process {
   def apply(program: String, args: Seq[String]): Process =
     processWithStandardStreams(SProcess(program, args))
 
+  def apply(program: String): Process =
+    apply(program, Seq())
+
   def apply(toRun: Seq[String]): Process =
     processWithStandardStreams(SProcess(toRun))
 
