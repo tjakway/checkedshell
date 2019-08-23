@@ -23,12 +23,12 @@ trait Redirectable[A] extends HasStreamWriters[A] {
       }
 
     private def replaceF: AlterF = writerMap => descriptor => writer => {
-      writerMap.updated(descriptor, Seq(writer))
+      writerMap.updated(descriptor, Set(writer))
     }
 
     private def addF: AlterF = writerMap => descriptor => writer => {
-      val existingWriters: Seq[Writer] = writerMap.getOrElse(descriptor, Seq())
-      val newWriters: Seq[Writer] = existingWriters :+ writer
+      val existingWriters: Set[Writer] = writerMap.getOrElse(descriptor, Set())
+      val newWriters: Set[Writer] = existingWriters + writer
       writerMap.updated(descriptor, newWriters)
     }
 
@@ -131,7 +131,7 @@ trait Redirectable[A] extends HasStreamWriters[A] {
 
     swMap.get(dest) match {
       case Some(writersToAdd) => {
-        val currentWriters = swMap.getOrElse(src, Seq.empty)
+        val currentWriters = swMap.getOrElse(src, Set.empty)
         val newWriters = currentWriters ++ writersToAdd
         copyWithStreamWriters(sw.copy(streamWritersMap = swMap.updated(dest, newWriters)))
       }

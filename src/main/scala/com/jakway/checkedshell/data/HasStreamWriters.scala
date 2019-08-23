@@ -25,7 +25,7 @@ trait HasStreamWriters[+A] {
     val streamWritersMap = streamWriters.streamWritersMap
     val resMap = additionalWriters.streamWritersMap.foldLeft(streamWritersMap) {
       case (acc, (descriptor, theseWriters)) => {
-        val currentWriters = acc.getOrElse(descriptor, Seq.empty)
+        val currentWriters = acc.getOrElse(descriptor, Set.empty)
         val newWriters = currentWriters ++ theseWriters
         val newAcc = acc.updated(descriptor, newWriters)
 

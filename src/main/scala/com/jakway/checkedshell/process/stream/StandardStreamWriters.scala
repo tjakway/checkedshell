@@ -21,10 +21,14 @@ class StandardStreamWriters(val initialSize: Int =
   def writeStdout: String => Unit = writeStringWriter(stdoutWriter)
   def writeStderr: String => Unit = writeStringWriter(stderrWriter)
 
-  val writerMap: StreamWriterMap = Map {
-    StandardJobOutputDescriptor.Stdout -> Seq(stdoutWriter)
-    StandardJobOutputDescriptor.Stderr -> Seq(stderrWriter)
-  }
+  //***********WARNING***********
+  // changing this to Map { ... } causes it to ignore this first entry!
+  // (reasons unknown)
+  //*****************************
+  val writerMap: StreamWriterMap = Map(
+    StandardJobOutputDescriptor.Stdout -> Set(stdoutWriter),
+    StandardJobOutputDescriptor.Stderr -> Set(stderrWriter)
+  )
 
   val streamWriters: StreamWriters = StreamWriters(
     Some(stdoutWriter), Some(stderrWriter), writerMap)

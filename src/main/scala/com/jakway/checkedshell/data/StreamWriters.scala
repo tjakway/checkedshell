@@ -11,11 +11,12 @@ case class StreamWriters(stdoutWriter: Option[Writer],
                          streamWritersMap: StreamWriterMap) {
 
   def toProcessLogger: SProcessLogger = {
+    lazy val lineSeparator: String = System.lineSeparator()
     //look up writers in the map and write the data to all of them
     def writeKeyedWriter: JobOutputDescriptor => String => Unit = key => data => {
       streamWritersMap.get(key).foreach { writers =>
         val cs: CharSequence = data
-        writers.foreach(_.append(cs + System.lineSeparator()))
+        writers.foreach(_.append(cs + lineSeparator))
       }
     }
 
@@ -27,5 +28,5 @@ case class StreamWriters(stdoutWriter: Option[Writer],
 }
 
 object StreamWriters {
-  type StreamWriterMap = Map[JobOutputDescriptor, Seq[Writer]]
+  type StreamWriterMap = Map[JobOutputDescriptor, Set[Writer]]
 }
