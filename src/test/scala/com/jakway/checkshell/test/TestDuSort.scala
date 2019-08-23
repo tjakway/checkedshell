@@ -3,7 +3,7 @@ package com.jakway.checkshell.test
 import com.jakway.checkedshell.process.{Job, Process}
 import com.jakway.checkedshell.test.framework.HasDefaultTestConfig
 import com.jakway.checkedshell.util.SearchPath
-import com.jakway.checkshell.test.framework.WithJobOutputMatcher
+import com.jakway.checkshell.test.framework.{GetProgramOutput, WithJobOutputMatcher}
 import org.scalatest.Matchers
 import org.scalatest.flatspec.AnyFlatSpecLike
 
@@ -11,6 +11,7 @@ class TestDuSort
   extends AnyFlatSpecLike
     with Matchers
     with WithJobOutputMatcher
+    with GetProgramOutput
     with HasDefaultTestConfig {
   import TestDuSort._
 
@@ -24,8 +25,13 @@ class TestDuSort
     res should be ('right)
   }
 
-  testName should "run without crashing" in {
+  it should "run without crashing" in {
     jobToTest.run(None) should matchJobOutput(Some(0), None, None)
+  }
+
+  it should "have identical output across runs" in {
+    val firstRunRes = getProgramOutput(jobToTest.run(None))
+    jobToTest.run(None) should matchJobOutput(firstRunRes)
   }
 }
 

@@ -10,6 +10,7 @@ import org.scalatest.matchers.{MatchResult, Matcher}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+//TODO: eliminate duplication with GetProgramOutput
 abstract class JobOutputVerifier(val timeout: Duration)
   extends Matcher[JobOutput] {
 
