@@ -38,7 +38,7 @@ abstract class JobOutputMatcher(val timeout: Duration)
       val fmt = new Formatter()
       fmt.format("%s failed checks:", actualOutput)
       checkResults.foreach { thisErrorMessage =>
-        fmt.format("\t%s%n", thisErrorMessage)
+        fmt.format("%n\t%s", thisErrorMessage)
       }
       fmt.toString
     }
