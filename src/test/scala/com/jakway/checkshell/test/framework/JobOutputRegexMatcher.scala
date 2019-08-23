@@ -33,7 +33,7 @@ object JobOutputRegexMatcher {
 
   def errMsg[A](actual: A, pattern: Pattern, fieldName: String): String = {
     s"Expected $fieldName to match regex ${pattern.pattern()} " +
-      s"but $actual does not match"
+      s"but < $actual > does not match"
   }
 
   //alternatively could just use the matchAllPattern in case of None
