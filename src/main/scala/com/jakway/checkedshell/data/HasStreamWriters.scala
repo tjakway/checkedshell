@@ -61,10 +61,12 @@ trait HasStreamWriters[+A] {
       }
     }
 
-    val combinedError = CloseStreamErrors(errs)
+    if(errs.nonEmpty) {
+      val combinedError = CloseStreamErrors(errs)
 
-    val errorData: ErrorData = ErrorData(Some("Stream close errors"), combinedError)
-    rc.errorBehavior.handleError(errorData)
+      val errorData: ErrorData = ErrorData(Some("Stream close errors"), combinedError)
+      rc.errorBehavior.handleError(errorData)
+    }
   }
 }
 
