@@ -1,7 +1,5 @@
 package com.jakway.checkshell.test
 
-import java.util.regex.Pattern
-
 import com.jakway.checkedshell.process.{Job, Process}
 import com.jakway.checkedshell.test.framework.HasDefaultTestConfig
 import com.jakway.checkedshell.util.SearchPath
@@ -48,8 +46,13 @@ class TestDuSort
 object TestDuSort {
   val testName: String ="Sorted du job"
 
-  val jobToTest: Job = {
-    Process("du", Seq("-h"))
+  /**
+   * need to recreate the job for each test
+   * or the writers will be reused
+   * @return
+   */
+  def jobToTest: Job = {
+    Process("du", Seq("-h", "-d", "1"))
       .flatMap(Process("sort", Seq("-h")))
   }
 }

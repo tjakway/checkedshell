@@ -26,9 +26,10 @@ object JobOutputRegexMatcher {
    * note: these patterns all match the entire line
    */
   object CommonPatterns {
-    lazy val matchAllPattern: Pattern = Pattern.compile("""^.*$""")
-    lazy val matchWhitespaceOrEmpty: Pattern = Pattern.compile("""^\s*$""")
-    lazy val matchNonWhitespace: Pattern = Pattern.compile("""^[^\s]+$""")
+    val flags: Int = Pattern.DOTALL
+    lazy val matchAllPattern: Pattern = Pattern.compile("""^.*$""", flags)
+    lazy val matchWhitespaceOrEmpty: Pattern = Pattern.compile("""^\s*$""", flags)
+    lazy val matchNonWhitespace: Pattern = Pattern.compile("""^.*\S+.*$""", flags)
   }
 
   def errMsg[A](actual: A, pattern: Pattern, fieldName: String): String = {

@@ -70,7 +70,7 @@ class Process(val processData: ProcessData,
 
       if(rc.streamsConfiguration.closeStreamsAfterExit) {
         closeAllStreams(rc)
-        logger.debug("Streams closed")
+        logger.trace("Streams closed")
       }
 
       new ProgramOutput(exitCode, stdout, stderr)
