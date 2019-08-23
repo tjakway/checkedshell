@@ -10,9 +10,10 @@ libraryDependencies ++=
       "ch.qos.logback"  %  "logback-classic"    % "1.2.3",
 
       "org.scalatest" %% "scalatest" % "3.0.8" % "test",
+      "org.scalatestplus" % "scalatestplus-scalacheck_2.12" % "1.0.0-SNAP8",
+
       "org.scalactic" %% "scalactic" % "3.0.8" % "test",
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test",
-      "org.scalatestplus" % "scalatestplus-scalacheck_2.12" % "1.0.0-SNAP8")
+      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test")
 
 mainClass in assembly := Some("com.jakway.Main")
 

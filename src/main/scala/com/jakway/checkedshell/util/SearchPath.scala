@@ -89,5 +89,4 @@ object SearchPath {
       case None => ExecutableNotFound(executable, pathVar, searchRes._1)
     }
   }
-
 }
