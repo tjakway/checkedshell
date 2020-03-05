@@ -106,8 +106,9 @@ trait Job
 object Job {
   type JobOutput = Future[ProgramOutput]
   type RunJobF = Option[ProgramOutput] =>
-                  RunConfiguration => ExecutionContext =>
-                    JobOutput
+                  RunConfiguration =>
+                  ExecutionContext =>
+                  JobOutput
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 }
