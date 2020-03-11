@@ -18,7 +18,7 @@ class CloseBehavior(val logError: LogError)
     }
   }
 
-  def doOnSuccess(ret: => CloseReturnType, f: () => ()): CloseReturnType = {
+  def doOnSuccess(ret: => CloseReturnType, f: () => Unit): CloseReturnType = {
     ret match {
       case Left(_) => ret
       case Right(_) => {
