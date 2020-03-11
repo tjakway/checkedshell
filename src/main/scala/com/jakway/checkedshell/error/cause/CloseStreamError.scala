@@ -13,6 +13,9 @@ object CloseStreamError {
     e.initCause(t)
     e
   }
+
+  class DoubleCloseError(override val msg: String)
+    extends CloseStreamError(msg)
 }
 
 class CloseStreamErrors(override val msg: String)
