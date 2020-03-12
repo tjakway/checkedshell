@@ -104,9 +104,6 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
     closeOutputStream
   }
 
-  override protected def getDefaultCloseBehavior: CloseBehavior =
-    CloseBehavior.default()
-
   override def toString: String = {
     val fmt: Formatter = {
       val sb = new StringBuffer()

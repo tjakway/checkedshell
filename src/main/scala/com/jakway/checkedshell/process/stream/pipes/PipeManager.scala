@@ -11,7 +11,8 @@ trait PipeManager extends Closeable {
    * take any parameters
    * @return
    */
-  protected def getDefaultCloseBehavior: CloseBehavior
+  protected def getDefaultCloseBehavior: CloseBehavior =
+    CloseBehavior.default()
 
   def getInputStream: InputStream
   def getOutputStream: OutputStream
