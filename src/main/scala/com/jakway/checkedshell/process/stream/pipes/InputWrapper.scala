@@ -4,7 +4,9 @@ import java.io.{BufferedReader, InputStream, InputStreamReader, Reader, StringRe
 import java.nio.charset.Charset
 
 import com.jakway.checkedshell.util.StringReaderUtil
+import org.apache.commons.io.input.ReaderInputStream
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.Source
 
 trait InputWrapper {
@@ -23,6 +25,10 @@ trait InputWrapper {
   def getInputAsString(enc: String = encoding): String =
     StringReaderUtil.inputStreamToString(toInputStream, enc)
 
+  def getInputAsFutureString(enc: String = encoding)
+                            (implicit ec: ExecutionContext): Future[String] =
+    Future(getInputAsString(enc))
+
   def toLines(enc: String = encoding): Iterator[String] = {
     Source
       .fromInputStream(toInputStream, enc)
@@ -37,6 +43,20 @@ object InputWrapper {
     override def toInputStream: InputStream = is
   }
 
+  private class StringInputWrapper(val input: String,
+                                   override val encoding: String)
+    extends InputStreamInputWrapper(
+      stringToInputStream(input, encoding),
+      encoding
+    )
+
   def apply(is: InputStream, encoding: String): InputWrapper =
     new InputStreamInputWrapper(is, encoding)
+
+  def apply(input: String, encoding: String): InputWrapper =
+    new StringInputWrapper(input, encoding)
+
+  def stringToInputStream(input: String, encoding: String): InputStream = {
+    new ReaderInputStream(new StringReader(input), encoding)
+  }
 }
