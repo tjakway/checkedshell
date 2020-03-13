@@ -1,6 +1,7 @@
 package com.jakway.checkedshell.process
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.{HasStreamWriters, ProgramOutput, StreamWriters}
+import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.{HasStreamWriters, StreamWriters}
 import com.jakway.checkedshell.process.Job.JobOutput
 
 import scala.concurrent.ExecutionContext

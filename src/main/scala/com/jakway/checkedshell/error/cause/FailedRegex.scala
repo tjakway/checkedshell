@@ -1,6 +1,6 @@
 package com.jakway.checkedshell.error.cause
 
-import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.data.output.ProgramOutput
 
 import scala.util.matching.Regex
 

@@ -1,5 +1,7 @@
 package com.jakway.checkedshell.data
 
+import com.jakway.checkedshell.data.output.ProgramOutput
+
 class TypedProgramOutput[+A](override val exitCode: Int,
                              val data: A,
                              override val stderr: String,

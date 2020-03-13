@@ -1,7 +1,8 @@
 package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.{HasStreamWriters, ProgramOutput}
+import com.jakway.checkedshell.data.HasStreamWriters
+import com.jakway.checkedshell.data.output.ProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}

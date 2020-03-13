@@ -1,4 +1,4 @@
-package com.jakway.checkedshell.data
+package com.jakway.checkedshell.data.output
 
 class ProgramOutput(val exitCode: Int,
                     val stdout: String,

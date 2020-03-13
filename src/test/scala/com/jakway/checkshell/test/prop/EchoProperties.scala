@@ -1,7 +1,7 @@
 package com.jakway.checkshell.test.prop
 
 import com.jakway.checkedshell.common.Echo
-import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.data.output.ProgramOutput
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.TaskJob
 import com.jakway.checkedshell.test.framework.HasDefaultTestConfig

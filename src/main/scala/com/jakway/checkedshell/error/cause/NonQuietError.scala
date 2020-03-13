@@ -1,9 +1,10 @@
 package com.jakway.checkedshell.error.cause
 
-import com.jakway.checkedshell.data.ProgramOutput
+import com.jakway.checkedshell.data.output.ProgramOutput
 
 /**
  * Expected both streams to be empty
+ *
  * @param output
  */
 case class NonQuietError(override val output: ProgramOutput)
