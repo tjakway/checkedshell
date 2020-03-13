@@ -6,7 +6,6 @@ import java.util.Formatter
 import com.jakway.checkedshell.error.behavior.CloseBehavior
 import com.jakway.checkedshell.error.behavior.CloseBehavior.CloseReturnType
 import com.jakway.checkedshell.error.cause
-import com.jakway.checkedshell.error.cause.CloseStreamError
 import org.slf4j.{Logger, LoggerFactory}
 
 private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
@@ -118,4 +117,9 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
 
 object ChannelPipeManager {
   type PipeType = java.nio.channels.Pipe
+
+  def apply(): PipeManager = new ChannelPipeManager(Pipe.open(), None)
+
+  def apply(description: String): PipeManager =
+    new ChannelPipeManager(Pipe.open(), Some(description))
 }
