@@ -1,8 +1,8 @@
 package com.jakway.checkedshell.error.cause
 
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 
-class NonEmptyStream(override val output: ProgramOutput,
+class NonEmptyStream(override val output: FinishedProgramOutput,
                      val streamName: String)
   extends BadProgramOutput(output) {
 

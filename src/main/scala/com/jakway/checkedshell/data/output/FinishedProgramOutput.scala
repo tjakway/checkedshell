@@ -1,19 +1,19 @@
 package com.jakway.checkedshell.data.output
 
-class ProgramOutput(val exitCode: Int,
-                    val stdout: String,
-                    val stderr: String) {
+class FinishedProgramOutput(val exitCode: Int,
+                            val stdout: String,
+                            val stderr: String) {
   override def toString: String = {
     //workaround for scala not handling quotes in interpolated strings
     //see https://github.com/scala/bug/issues/6476
     new java.util.Formatter()
-      .format("ProgramOutput(%s, \"%s\", \"%s\")",
+      .format("FinishedProgramOutput(%s, \"%s\", \"%s\")",
         exitCode.toString, stdout, stderr)
       .toString
   }
 
   override def equals(obj: Any): Boolean = obj match {
-    case ProgramOutput(otherExitCode, otherStdout, otherStderr) => {
+    case FinishedProgramOutput(otherExitCode, otherStdout, otherStderr) => {
       exitCode == otherExitCode &&
         stdout == otherStdout &&
         stderr == otherStderr
@@ -21,8 +21,8 @@ class ProgramOutput(val exitCode: Int,
   }
 }
 
-object ProgramOutput {
-  def unapply(x: ProgramOutput): Option[(Int, String, String)] = {
+object FinishedProgramOutput {
+  def unapply(x: FinishedProgramOutput): Option[(Int, String, String)] = {
     Some((x.exitCode, x.stdout, x.stderr))
   }
 }

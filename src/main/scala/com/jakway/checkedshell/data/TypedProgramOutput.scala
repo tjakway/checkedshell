@@ -1,12 +1,12 @@
 package com.jakway.checkedshell.data
 
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 
 class TypedProgramOutput[+A](override val exitCode: Int,
                              val data: A,
                              override val stderr: String,
                              override val stdout: String)
-  extends ProgramOutput(exitCode, stdout, stderr) {
+  extends FinishedProgramOutput(exitCode, stdout, stderr) {
 
   def this(exitCode: Int, data: A, stderr: String) {
     this(exitCode, data, stderr, data.toString)

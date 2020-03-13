@@ -2,7 +2,7 @@ package com.jakway.checkshell.test.framework
 
 import java.util.Formatter
 
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.test.framework.HasTestConfig
 import org.scalatest.matchers.{MatchResult, Matcher}
@@ -19,11 +19,11 @@ abstract class JobOutputMatcher(val timeout: Duration)
   protected def checkStdout(stdout: String): Seq[String]
   protected def checkStderr(stderr: String): Seq[String]
 
-  protected def getProgramOutput(jobOutput: JobOutput): ProgramOutput =
+  protected def getProgramOutput(jobOutput: JobOutput): FinishedProgramOutput =
     Await.result(jobOutput, timeout)
 
   def apply(left: JobOutput): MatchResult = {
-    val actualOutput: ProgramOutput = getProgramOutput(left)
+    val actualOutput: FinishedProgramOutput = getProgramOutput(left)
 
     //see if all checks passed
     val checkResults =

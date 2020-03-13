@@ -2,11 +2,11 @@ package com.jakway.checkshell.test.framework
 
 import java.util.regex.Pattern
 
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.test.framework.HasTestConfig
 
 trait WithJobOutputMatcher extends HasTestConfig {
-  def matchJobOutput(expected: ProgramOutput): JobOutputMatcher =
+  def matchJobOutput(expected: FinishedProgramOutput): JobOutputMatcher =
     //unroll fields
     new JobOutputEqualityMatcher(
       Some(expected.exitCode),

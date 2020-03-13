@@ -3,7 +3,7 @@ package com.jakway.checkedshell.common
 import java.util.Formatter
 
 import com.jakway.checkedshell.config.RunConfiguration
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.process.Job.RunJobF
 import com.jakway.checkedshell.process.Task
 
@@ -55,7 +55,7 @@ object Echo {
           fmt.format("\n")
         } else {}
 
-        new ProgramOutput(0, fmt.toString, "")
+        new FinishedProgramOutput(0, fmt.toString, "")
       }
   }
 }

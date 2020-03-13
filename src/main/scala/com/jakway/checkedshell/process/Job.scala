@@ -2,7 +2,7 @@ package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.HasStreamWriters
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
@@ -15,7 +15,7 @@ trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
 
-  final def run(input: Option[ProgramOutput])
+  final def run(input: Option[FinishedProgramOutput])
                (implicit runConfiguration: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
 
@@ -48,7 +48,7 @@ trait Job
     runConfiguration.errorBehavior.handleError(e)
   }
 
-  protected def runJob(input: Option[ProgramOutput])
+  protected def runJob(input: Option[FinishedProgramOutput])
                       (implicit rc: RunConfiguration,
                                 ec: ExecutionContext): JobOutput
 
@@ -58,8 +58,8 @@ trait Job
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 
-  def map(f: ProgramOutput => ProgramOutput): Job = {
-    def newRunJob(input: Option[ProgramOutput])
+  def map(f: FinishedProgramOutput => FinishedProgramOutput): Job = {
+    def newRunJob(input: Option[FinishedProgramOutput])
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
       runJob(input).map(f)
@@ -73,8 +73,8 @@ trait Job
 
   //TODO: remove duplication between map and flatMap
   //difficult because most of the code is signatures with little actual work
-  def flatMap(f: ProgramOutput => JobOutput): Job = {
-    def newRunJob(input: Option[ProgramOutput])
+  def flatMap(f: FinishedProgramOutput => JobOutput): Job = {
+    def newRunJob(input: Option[FinishedProgramOutput])
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
       runJob(input).flatMap(f)
@@ -88,7 +88,7 @@ trait Job
 
   def flatMap(toOtherJob: Job): Job = {
     def newRunFunction: RunJobF =
-      (input: Option[ProgramOutput]) =>
+      (input: Option[FinishedProgramOutput]) =>
       (rc: RunConfiguration) =>
       (ec: ExecutionContext) => {
         //run our job first, then the passed job
@@ -105,8 +105,8 @@ trait Job
 }
 
 object Job {
-  type JobOutput = Future[ProgramOutput]
-  type RunJobF = Option[ProgramOutput] =>
+  type JobOutput = Future[FinishedProgramOutput]
+  type RunJobF = Option[FinishedProgramOutput] =>
                   RunConfiguration =>
                   ExecutionContext =>
                   JobOutput

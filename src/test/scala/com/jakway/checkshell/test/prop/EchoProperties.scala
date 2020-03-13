@@ -1,7 +1,7 @@
 package com.jakway.checkshell.test.prop
 
 import com.jakway.checkedshell.common.Echo
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.process.Job.JobOutput
 import com.jakway.checkedshell.process.TaskJob
 import com.jakway.checkedshell.test.framework.HasDefaultTestConfig
@@ -26,7 +26,7 @@ class EchoProperties
 
   property("flatMap pipes properly") {
     forAll(Gen.alphaNumStr) { (str: String) =>
-      val expectedOutput = new ProgramOutput(0, str, "")
+      val expectedOutput = new FinishedProgramOutput(0, str, "")
       echoTest(new Echo(false, Seq(str))) should matchJobOutput(expectedOutput)
       //Await.result(future, getTestConfig.futureTimeOut).stdout shouldEqual str
     }
@@ -35,7 +35,7 @@ class EchoProperties
   property("prints with line separator") {
     forAll(Gen.alphaNumStr) { (str: String) =>
       val futureTestRes = echoTest(new Echo(true, Seq(str)))
-      val testRes: ProgramOutput = Await.result(futureTestRes, getTestConfig.futureTimeOut)
+      val testRes: FinishedProgramOutput = Await.result(futureTestRes, getTestConfig.futureTimeOut)
 
       testRes.stdout.endsWith(System.lineSeparator()) shouldBe true
     }
