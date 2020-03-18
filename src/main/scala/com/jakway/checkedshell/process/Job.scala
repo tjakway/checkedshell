@@ -2,12 +2,13 @@ package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.HasStreamWriters
-import com.jakway.checkedshell.data.output.FinishedProgramOutput
+import com.jakway.checkedshell.data.output.ProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{JobOutput, RunJobF}
+import com.jakway.checkedshell.process.Job.{JobInput, JobOutput, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
+import com.jakway.checkedshell.process.stream.pipes.output.OutputStreamWrapper.{StderrWrapper, StdoutWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -15,18 +16,22 @@ trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
 
-  final def run(input: Option[FinishedProgramOutput])
+  final def run(input: JobInput)
                (implicit runConfiguration: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
 
     runJob(input)
       .map { output =>
 
-        val errs = checks.foldLeft(Set.empty: Set[ErrorCause]) {
+        //TODO: implement error checks on pipes
+        /*
+        val errs: Set[ErrorCause] = checks.foldLeft(Set.empty: Set[ErrorCause]) {
           case (acc, thisCheck) => {
             acc ++ thisCheck(output).toSet
           }
         }
+         */
+        val errs: Set[ErrorCause] = Set.empty
         if(errs.isEmpty) {
           output
         } else {
@@ -44,11 +49,12 @@ trait Job
       }
   }
 
-  private def handleErrors(e: ErrorData, runConfiguration: RunConfiguration): Unit = {
+  private def handleErrors(e: ErrorData,
+                           runConfiguration: RunConfiguration): Unit = {
     runConfiguration.errorBehavior.handleError(e)
   }
 
-  protected def runJob(input: Option[FinishedProgramOutput])
+  protected def runJob(input: JobInput)
                       (implicit rc: RunConfiguration,
                                 ec: ExecutionContext): JobOutput
 
@@ -58,8 +64,8 @@ trait Job
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 
-  def map(f: FinishedProgramOutput => FinishedProgramOutput): Job = {
-    def newRunJob(input: Option[FinishedProgramOutput])
+  def map(f: ProgramOutput => ProgramOutput): Job = {
+    def newRunJob(input: JobInput)
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
       runJob(input).map(f)
@@ -67,14 +73,18 @@ trait Job
 
     //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
     def g: RunJobF =
-      a => (rc: RunConfiguration) => (ec: ExecutionContext) => newRunJob(a)(rc, ec)
+      a =>
+        (rc: RunConfiguration) =>
+        (ec: ExecutionContext) =>
+          newRunJob(a)(rc, ec)
+
     copyWithNewRunJob(g)
   }
 
   //TODO: remove duplication between map and flatMap
   //difficult because most of the code is signatures with little actual work
-  def flatMap(f: FinishedProgramOutput => JobOutput): Job = {
-    def newRunJob(input: Option[FinishedProgramOutput])
+  def flatMap(f: ProgramOutput => JobOutput): Job = {
+    def newRunJob(input: JobInput)
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
       runJob(input).flatMap(f)
@@ -88,7 +98,7 @@ trait Job
 
   def flatMap(toOtherJob: Job): Job = {
     def newRunFunction: RunJobF =
-      (input: Option[FinishedProgramOutput]) =>
+      (input: Option[ProgramOutput]) =>
       (rc: RunConfiguration) =>
       (ec: ExecutionContext) => {
         //run our job first, then the passed job
@@ -105,8 +115,11 @@ trait Job
 }
 
 object Job {
-  type JobOutput = Future[FinishedProgramOutput]
-  type RunJobF = Option[FinishedProgramOutput] =>
+  type JobInput = Option[ProgramOutput]
+  type JobOutput = Future[Int]
+  type RunJobF = JobInput =>
+                  StdoutWrapper =>
+                  StderrWrapper =>
                   RunConfiguration =>
                   ExecutionContext =>
                   JobOutput
