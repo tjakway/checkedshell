@@ -1,6 +1,6 @@
-package com.jakway.checkedshell.process.stream.pipes
+package com.jakway.checkedshell.process.stream.pipes.input
 
-import java.io.{BufferedReader, InputStream, InputStreamReader, Reader, StringReader}
+import java.io._
 import java.nio.charset.Charset
 
 import com.jakway.checkedshell.util.StringReaderUtil

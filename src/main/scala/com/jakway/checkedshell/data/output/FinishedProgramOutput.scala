@@ -1,7 +1,7 @@
 package com.jakway.checkedshell.data.output
 
 import com.jakway.checkedshell.config.Config
-import com.jakway.checkedshell.process.stream.pipes.InputWrapper
+import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
 
 import scala.concurrent.Future
 
