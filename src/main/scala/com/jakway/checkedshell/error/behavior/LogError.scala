@@ -3,7 +3,7 @@ package com.jakway.checkedshell.error.behavior
 import java.util.Formatter
 
 import com.jakway.checkedshell.error.ErrorData
-import com.jakway.checkedshell.util.Util
+import com.jakway.checkedshell.util.LogF
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
@@ -19,15 +19,7 @@ class LogError(val logF: LogError.LogF = LogError.defaultLogF,
    override def handleError(errorData: ErrorData): Unit = logF(logger)(formatErrorData(errorData))
  }
 
-object LogError {
-  type LogF = Logger => String => Unit
-
-  def trace: LogF = l => m => l.trace(m)
-  def debug: LogF = l => m => l.debug(m)
-  def info: LogF = l => m => l.info(m)
-  def warn: LogF = l => m => l.warn(m)
-  def error: LogF = l => m => l.error(m)
-
+object LogError extends LogF {
   def defaultLogF: LogF = error
 
   val defaultMessageSeparator: String = ": "
