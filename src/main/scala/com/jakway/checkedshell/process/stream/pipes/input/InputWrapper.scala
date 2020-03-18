@@ -12,18 +12,18 @@ import scala.io.Source
 trait InputWrapper {
   val encoding: String
 
-  def toReader(enc: String = encoding): Reader = {
+  def getReader(enc: String = encoding): Reader = {
     new BufferedReader(
-      new InputStreamReader(toInputStream, enc))
+      new InputStreamReader(getInputStream, enc))
   }
 
-  def toReader(charset: Charset): Reader =
-    toReader(charset.displayName())
+  def getReader(charset: Charset): Reader =
+    getReader(charset.displayName())
 
-  def toInputStream: InputStream
+  def getInputStream: InputStream
 
   def getInputAsString(enc: String = encoding): String =
-    StringReaderUtil.inputStreamToString(toInputStream, enc)
+    StringReaderUtil.inputStreamToString(getInputStream, enc)
 
   def getInputAsFutureString(enc: String = encoding)
                             (implicit ec: ExecutionContext): Future[String] =
@@ -31,7 +31,7 @@ trait InputWrapper {
 
   def toLines(enc: String = encoding): Iterator[String] = {
     Source
-      .fromInputStream(toInputStream, enc)
+      .fromInputStream(getInputStream, enc)
       .getLines
   }
 }
@@ -40,7 +40,7 @@ object InputWrapper {
   private class InputStreamInputWrapper(val is: InputStream,
                                         val encoding: String)
     extends InputWrapper {
-    override def toInputStream: InputStream = is
+    override def getInputStream: InputStream = is
   }
 
   private class StringInputWrapper(val input: String,
