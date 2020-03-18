@@ -34,11 +34,15 @@ object StreamsConfiguration {
  */
 case class RunConfiguration(errorBehavior: ErrorBehavior,
                             charset: Charset,
-                            streamsConfiguration: StreamsConfiguration)
+                            streamsConfiguration: StreamsConfiguration,
+                            defaultJobBehavior: DefaultJobBehavior)
 
 object RunConfiguration {
   val default: RunConfiguration = RunConfiguration(
     ThrowOnError,
     StandardCharsets.UTF_8,
-    StreamsConfiguration.default)
+    StreamsConfiguration.default,
+    DefaultJobBehavior.default)
+
+
 }
