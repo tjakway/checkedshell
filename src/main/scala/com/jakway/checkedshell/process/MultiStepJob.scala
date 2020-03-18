@@ -7,6 +7,14 @@ import com.jakway.checkedshell.process.Job.JobOutput
 
 import scala.concurrent.ExecutionContext
 
+/**
+ * A wrapper class for when [[runJobF]] is a composition of [[Job.RunJobF]]
+ * methods from multiple processes
+ * @param runJobF runs two or more [[Job.RunJobF]] functions from
+ *                other classes
+ * @param streamWriters
+ * @tparam A
+ */
 class MultiStepJob[A](val runJobF: Job.RunJobF,
                       val streamWriters: StreamWriters)
   extends Job {
