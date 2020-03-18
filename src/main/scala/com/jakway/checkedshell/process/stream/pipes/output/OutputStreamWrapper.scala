@@ -3,7 +3,7 @@ package com.jakway.checkedshell.process.stream.pipes.output
 import java.io.{OutputStream, OutputStreamWriter, Writer}
 
 class OutputStreamWrapper(val encoding: String,
-                          val description: Option[String],
+                          val optDescription: Option[String],
                           protected val os: OutputStream)
   extends OutputWrapper {
 
