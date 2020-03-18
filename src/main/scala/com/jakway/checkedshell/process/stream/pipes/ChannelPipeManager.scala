@@ -6,10 +6,13 @@ import java.util.Formatter
 import com.jakway.checkedshell.error.behavior.CloseBehavior
 import com.jakway.checkedshell.error.behavior.CloseBehavior.CloseReturnType
 import com.jakway.checkedshell.error.cause
+import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
+import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
 import org.slf4j.{Logger, LoggerFactory}
 
 private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
-                                 val desc: Option[String])
+                                 val desc: Option[String],
+                                 val defaultCloseBehavior: CloseBehavior)
   extends PipeManager {
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -18,6 +21,15 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
 
   private var inputStreamClosed: Boolean = false
   private var outputStreamClosed: Boolean = false
+
+  override protected def getDefaultCloseBehavior: CloseBehavior =
+    defaultCloseBehavior
+
+  override def getInputWrapper(enc: String): InputWrapper =
+    InputWrapper(getInputStream, enc)
+
+  override def getOutputWrapper(enc: String): OutputWrapper =
+    Output
 
   private def checkDoubleClose(streamDesc: String)
                               (closed: Boolean,
@@ -113,13 +125,18 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
       desc.getOrElse("<No description>"))
     fmt.toString
   }
+
+  protected def wrapperDescription(optDescription: Option[String],
+                                   wrapperType: String): String = {
+    wrapperType + " of " + optDescription
+  }
+  protected def inputWrapperDescription: String =
+    wrapperDescription(desc, classOf[InputWrapper].getSimpleName)
+  protected def outputWrapperDescription: String =
+    wrapperDescription(desc, classOf[OutputWrapper].getSimpleName)
+
 }
 
-object ChannelPipeManager {
+object ChannelPipeManager extends WithPipeManagerConstructors {
   type PipeType = java.nio.channels.Pipe
-
-  def apply(): PipeManager = new ChannelPipeManager(Pipe.open(), None)
-
-  def apply(description: String): PipeManager =
-    new ChannelPipeManager(Pipe.open(), Some(description))
 }
