@@ -22,3 +22,7 @@ trait ProgramOutput {
     }
   }
 }
+
+object ProgramOutput {
+  val empty: ProgramOutput = new FinishedProgramOutput(0, "", "")
+}
