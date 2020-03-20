@@ -2,9 +2,9 @@ package com.jakway.checkedshell.process.stream.pipes.output
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
 
-class OutputStreamWrapper(val encoding: String,
-                          val optDescription: Option[String],
-                          protected val os: OutputStream)
+class OutputStreamWrapper(protected val os: OutputStream,
+                          val encoding: String,
+                          val optDescription: Option[String])
   extends OutputWrapper {
 
   override def getOutputStream: OutputStream = os

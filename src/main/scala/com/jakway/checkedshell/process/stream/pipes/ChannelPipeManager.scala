@@ -11,7 +11,7 @@ import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
 import org.slf4j.{Logger, LoggerFactory}
 
 private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
-                                 val desc: Option[String],
+                                 val optDescription: Option[String],
                                  val defaultCloseBehavior: CloseBehavior)
   extends PipeManager {
   private val logger: Logger = LoggerFactory.getLogger(getClass)
@@ -26,7 +26,7 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
     defaultCloseBehavior
 
   override def getInputWrapper(enc: String): InputWrapper =
-    InputWrapper(getInputStream, enc)
+    InputWrapper(getInputStream, enc, optDescription)
 
   override def getOutputWrapper(enc: String): OutputWrapper =
     Output
