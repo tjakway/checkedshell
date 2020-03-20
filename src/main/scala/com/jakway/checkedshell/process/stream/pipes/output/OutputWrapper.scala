@@ -6,7 +6,7 @@ import com.jakway.checkedshell.process.stream.pipes.StreamWrapper
 
 trait OutputWrapper extends StreamWrapper  {
   val encoding: String
-  val description: Option[String]
+  val optDescription: Option[String]
 
   def getWriter(enc: String = encoding): Writer
   def getOutputStream: OutputStream
