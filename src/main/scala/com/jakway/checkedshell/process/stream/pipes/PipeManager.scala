@@ -30,11 +30,12 @@ trait PipeManager extends Closeable {
 }
 
 object PipeManager extends WithPipeManagerConstructors {
-  def newWrapperPair(optDescription: Option[String])
+  def newWrapperPair(enc: String,
+                     optDescription: Option[String])
                     (implicit closeBehavior: CloseBehavior):
     (InputWrapper, OutputWrapper) = {
 
     val pm = apply(optDescription)
+    (pm.getInputWrapper(enc), pm.getOutputWrapper(enc))
   }
-
 }
