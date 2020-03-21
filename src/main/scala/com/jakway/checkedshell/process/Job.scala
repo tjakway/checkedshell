@@ -6,7 +6,7 @@ import com.jakway.checkedshell.data.output.ProgramOutput
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{JobInput, JobOutput, RunJobF}
+import com.jakway.checkedshell.process.Job.{JobInput, JobOutput, JobStreams, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.pipes.output.OutputStreamWrapper.{StderrWrapper, StdoutWrapper}
 
@@ -64,7 +64,7 @@ trait Job
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 
-  def map(f: ProgramOutput => ProgramOutput): Job = {
+  def map(f: JobStreams => JobStreams): Job = {
     def newRunJob(input: JobInput)
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
@@ -116,7 +116,7 @@ trait Job
 
 object Job {
   type JobInput = Option[ProgramOutput]
-  type JobOutput = Future[Int]
+  type JobOutput = Future[ProgramOutput]
   type RunJobF = JobInput =>
                   StdoutWrapper =>
                   StderrWrapper =>
