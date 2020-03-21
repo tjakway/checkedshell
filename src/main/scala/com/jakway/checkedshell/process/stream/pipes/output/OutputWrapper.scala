@@ -11,3 +11,15 @@ trait OutputWrapper extends StreamWrapper  {
   def getWriter(enc: String = encoding): Writer
   def getOutputStream: OutputStream
 }
+
+object OutputWrapper {
+  def apply(os: OutputStream,
+            encoding: String,
+            optDescription: Option[String]): OutputWrapper =
+    new OutputStreamWrapper(os, encoding, optDescription)
+
+  def apply(os: OutputStream,
+            encoding: String,
+            description: String): OutputWrapper =
+    apply(os, encoding, Some(description))
+}

@@ -6,6 +6,7 @@ import java.util.Formatter
 import com.jakway.checkedshell.error.behavior.CloseBehavior
 import com.jakway.checkedshell.error.behavior.CloseBehavior.CloseReturnType
 import com.jakway.checkedshell.error.cause
+import com.jakway.checkedshell.process.stream.{SynchronizedInputStream, SynchronizedOutputStream}
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
 import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
 import org.slf4j.{Logger, LoggerFactory}
@@ -25,11 +26,23 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
   override protected def getDefaultCloseBehavior: CloseBehavior =
     defaultCloseBehavior
 
-  override def getInputWrapper(enc: String): InputWrapper =
-    InputWrapper(getInputStream, enc, optDescription)
+  override def getInputWrapper(enc: String): InputWrapper = {
+    InputWrapper(
+      new SynchronizedInputStream(
+        this, getInputStream,
+        () => closeInputStream(getDefaultCloseBehavior)),
+      enc, inputWrapperDescription
+    )
+  }
 
-  override def getOutputWrapper(enc: String): OutputWrapper =
-    Output
+  override def getOutputWrapper(enc: String): OutputWrapper = {
+    OutputWrapper(
+      new SynchronizedOutputStream(
+        this, getOutputStream,
+        () => closeOutputStream(getDefaultCloseBehavior)),
+      enc, outputWrapperDescription
+    )
+  }
 
   private def checkDoubleClose(streamDesc: String)
                               (closed: Boolean,
@@ -122,7 +135,7 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
     }
     fmt.format("%s(%s)",
       getClass.getSimpleName,
-      desc.getOrElse("<No description>"))
+      optDescription.getOrElse("<No description>"))
     fmt.toString
   }
 
@@ -131,9 +144,9 @@ private class ChannelPipeManager(val pipe: ChannelPipeManager.PipeType,
     wrapperType + " of " + optDescription
   }
   protected def inputWrapperDescription: String =
-    wrapperDescription(desc, classOf[InputWrapper].getSimpleName)
+    wrapperDescription(optDescription, classOf[InputWrapper].getSimpleName)
   protected def outputWrapperDescription: String =
-    wrapperDescription(desc, classOf[OutputWrapper].getSimpleName)
+    wrapperDescription(optDescription, classOf[OutputWrapper].getSimpleName)
 
 }
 

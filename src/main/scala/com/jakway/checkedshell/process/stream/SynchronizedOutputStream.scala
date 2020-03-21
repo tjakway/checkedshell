@@ -21,6 +21,4 @@ class SynchronizedOutputStream(val lock: Object,
       afterClose()
     }
   }
-
-  override def finalize(): Unit = lock.synchronized(os.finalize())
 }

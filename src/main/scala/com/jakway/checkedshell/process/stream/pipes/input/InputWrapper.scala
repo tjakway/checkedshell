@@ -55,8 +55,15 @@ object InputWrapper {
       optDescription
     )
 
-  def apply(is: InputStream, encoding: String, desc: Option[String]): InputWrapper =
+  def apply(is: InputStream,
+            encoding: String,
+            desc: Option[String]): InputWrapper =
     new InputStreamInputWrapper(is, encoding, desc)
+
+  def apply(is: InputStream,
+            encoding: String,
+            desc: String): InputWrapper =
+    apply(is, encoding, desc)
 
   def apply(input: String,
             encoding: String, desc: Option[String]): InputWrapper =

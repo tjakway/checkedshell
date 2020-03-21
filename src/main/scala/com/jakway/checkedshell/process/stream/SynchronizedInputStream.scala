@@ -31,6 +31,4 @@ class SynchronizedInputStream(val lock: Object,
       afterClose()
     }
   }
-
-  override def finalize(): Unit = lock.synchronized(is.finalize())
 }
