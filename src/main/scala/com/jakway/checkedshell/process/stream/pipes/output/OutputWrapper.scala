@@ -13,6 +13,9 @@ trait OutputWrapper extends StreamWrapper  {
 }
 
 object OutputWrapper {
+  type StdoutWrapper = OutputWrapper
+  type StderrWrapper = OutputWrapper
+
   def apply(os: OutputStream,
             encoding: String,
             optDescription: Option[String]): OutputWrapper =

@@ -2,7 +2,7 @@ package com.jakway.checkedshell.config
 
 import java.nio.charset.{Charset, StandardCharsets}
 
-import com.jakway.checkedshell.error.behavior.{ErrorBehavior, ThrowOnError}
+import com.jakway.checkedshell.error.behavior.{CloseBehavior, ErrorBehavior, ThrowOnError}
 
 /**
  *
@@ -30,7 +30,11 @@ object StreamsConfiguration {
 case class RunConfiguration(errorConfiguration: ErrorConfiguration,
                             charset: Charset,
                             streamsConfiguration: StreamsConfiguration,
-                            defaultJobBehavior: DefaultJobBehavior)
+                           //TODO: eliminate redundancy with StreamsConfiguration
+                            closeBehavior: CloseBehavior,
+                            defaultJobBehavior: DefaultJobBehavior) {
+  def encoding: String = charset.displayName()
+}
 
 object RunConfiguration {
 
@@ -38,6 +42,7 @@ object RunConfiguration {
     ErrorConfiguration.default,
     StandardCharsets.UTF_8,
     StreamsConfiguration.default,
+    CloseBehavior.default(),
     DefaultJobBehavior.default)
 
 

@@ -4,7 +4,7 @@ import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
 
 import scala.concurrent.Future
 
-class InProcessProgramOutput(val futureExitCode: Future[Int],
+class InProgressProgramOutput(val futureExitCode: Future[Int],
                              val pipedStdout: InputWrapper,
                              val pipedStderr: InputWrapper)
   extends ProgramOutput

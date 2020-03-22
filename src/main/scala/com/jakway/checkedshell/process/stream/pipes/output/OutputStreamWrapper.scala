@@ -13,8 +13,3 @@ class OutputStreamWrapper(protected val os: OutputStream,
     new OutputStreamWriter(os, encoding)
   }
 }
-
-object OutputStreamWrapper {
-  type StdoutWrapper = OutputStreamWrapper
-  type StderrWrapper = OutputStreamWrapper
-}

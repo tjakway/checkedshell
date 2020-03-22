@@ -2,13 +2,16 @@ package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.HasStreamWriters
-import com.jakway.checkedshell.data.output.{FinishedProgramOutput, ProgramOutput}
+import com.jakway.checkedshell.data.output.{FinishedProgramOutput, InProgressProgramOutput, ProgramOutput}
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, JobInput, JobOutput, JobStreams, RunJobF}
+import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, JobInput, JobOutput, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
-import com.jakway.checkedshell.process.stream.pipes.output.OutputStreamWrapper.{StderrWrapper, StdoutWrapper}
+import com.jakway.checkedshell.process.stream.pipes.PipeManager
+import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
+import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
+import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper.{StderrWrapper, StdoutWrapper}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -16,47 +19,36 @@ trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
 
+  def optDescription: Option[String]
+
   protected val errorCheckFunctions: ErrorCheckFunctions =
     new ErrorCheckFunctions(checks)
 
   final def run(input: JobInput)
-               (implicit runConfiguration: RunConfiguration,
+               (implicit rc: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
 
-    runJob(input)
-      .map { output =>
+    val (stdoutRead, stdoutWrite) =
+      Job.mkStdoutPipe(rc.encoding, optDescription)
 
-        //TODO: implement error checks on pipes
-        /*
-        val errs: Set[ErrorCause] = checks.foldLeft(Set.empty: Set[ErrorCause]) {
-          case (acc, thisCheck) => {
-            acc ++ thisCheck(output).toSet
-          }
-        }
-         */
-        val errs: Set[ErrorCause] = Set.empty
-        if(errs.isEmpty) {
-          output
-        } else {
-          val finalCause = ErrorCause(errs)
+    val (stderrRead, stderrWrite) =
+      Job.mkStderrPipe(rc.encoding, optDescription)
 
-          val errorData = ErrorData(None, finalCause)
 
-          handleErrors(errorData, runConfiguration)
+    val futureExitCode = runJob(input)(stdoutWrite)(stderrWrite)(rc, ec)
+    val res = new InProgressProgramOutput(futureExitCode, stdoutRead, stderrRead)
 
-          //depending on the run configuration the error will either have caused execution to
-          //terminate or will have been handled somehow
-          //return the output if we're going to continue
-          output
-        }
-      }
+    errorCheckFunctions
+      .applyErrorChecks(res, rc, ec)
   }
 
 
 
   protected def runJob(input: JobInput)
+                      (stdoutWrapper: StdoutWrapper)
+                      (stderrWrapper: StderrWrapper)
                       (implicit rc: RunConfiguration,
-                                ec: ExecutionContext): JobOutput
+                                ec: ExecutionContext): Future[Int]
 
   protected def copyWithNewRunJob(newRunJob: RunJobF): Job = {
     new MultiStepJob(newRunJob, getStreamWriters)
@@ -64,7 +56,7 @@ trait Job
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 
-  def map(f: JobStreams => JobStreams): Job = {
+  def map(f: FinishedProgramOutput => FinishedProgramOutput): Job = {
     def newRunJob(input: JobInput)
                  (implicit rc: RunConfiguration,
                            ec: ExecutionContext): JobOutput = {
@@ -122,12 +114,32 @@ object Job {
                   StderrWrapper =>
                   RunConfiguration =>
                   ExecutionContext =>
-                  JobOutput
+                  Future[Int]
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 
+
+  def mkStdoutPipe(encoding: String,
+                   jobDescription: Option[String])
+                  (implicit rc: RunConfiguration):
+    (InputWrapper, OutputWrapper) = {
+
+    val desc = jobDescription.map(d => s"stdout pipe of $d")
+
+    PipeManager.newWrapperPair(encoding, desc)(rc.closeBehavior)
+  }
+  def mkStderrPipe(encoding: String,
+                   jobDescription: Option[String])
+                  (implicit rc: RunConfiguration):
+  (InputWrapper, OutputWrapper) = {
+    val desc = jobDescription.map(d => s"stderr pipe of $d")
+    PipeManager.newWrapperPair(encoding, desc)(rc.closeBehavior)
+  }
+
+
+
   class ErrorCheckFunctions(val checks: Set[CheckFunction]) {
-    def applyErrorChecks(jobOutput: JobOutput,
+    def applyErrorChecks(output: ProgramOutput,
               runConfiguration: RunConfiguration,
               ec: ExecutionContext): JobOutput = {
       def transformProgramOutput(
@@ -152,7 +164,7 @@ object Job {
         case x => recoverF(x)
       }
 
-      jobOutput
+      output
         .transform(transformProgramOutput, id)(ec)
         .recover(recoverPF)(ec)
     }
