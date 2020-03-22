@@ -27,19 +27,15 @@ object StreamsConfiguration {
       closeOtherStreamsOnRedirect = true)
 }
 
-/**
- *
- * @param errorBehavior
- * @param charset
- */
-case class RunConfiguration(errorBehavior: ErrorBehavior,
+case class RunConfiguration(errorConfiguration: ErrorConfiguration,
                             charset: Charset,
                             streamsConfiguration: StreamsConfiguration,
                             defaultJobBehavior: DefaultJobBehavior)
 
 object RunConfiguration {
+
   val default: RunConfiguration = RunConfiguration(
-    ThrowOnError,
+    ErrorConfiguration.default,
     StandardCharsets.UTF_8,
     StreamsConfiguration.default,
     DefaultJobBehavior.default)
