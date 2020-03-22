@@ -2,11 +2,11 @@ package com.jakway.checkedshell.process
 
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.HasStreamWriters
-import com.jakway.checkedshell.data.output.ProgramOutput
+import com.jakway.checkedshell.data.output.{FinishedProgramOutput, ProgramOutput}
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{JobInput, JobOutput, JobStreams, RunJobF}
+import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, JobInput, JobOutput, JobStreams, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.pipes.output.OutputStreamWrapper.{StderrWrapper, StdoutWrapper}
 
@@ -15,6 +15,9 @@ import scala.concurrent.{ExecutionContext, Future}
 trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
+
+  protected val errorCheckFunctions: ErrorCheckFunctions =
+    new ErrorCheckFunctions(checks)
 
   final def run(input: JobInput)
                (implicit runConfiguration: RunConfiguration,
@@ -124,25 +127,38 @@ object Job {
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 
   class ErrorCheckFunctions(val checks: Set[CheckFunction]) {
-    def apply(jobOutput: JobOutput,
+    def applyErrorChecks(jobOutput: JobOutput,
               runConfiguration: RunConfiguration,
               ec: ExecutionContext): JobOutput = {
       def transformProgramOutput(
           programOutput: ProgramOutput): ProgramOutput = {
-        apply(programOutput, runConfiguration)
+        applyErrorChecks(programOutput, runConfiguration)
         programOutput
       }
+      def id: Throwable => Throwable = x => x
 
-      jobOutput.transform(
-        transformProgramOutput,
-        handleFailedFuture)(ec)
+      //TODO: integrate job description parameter
+      val recoverF: Throwable => ProgramOutput = { (throwable: Throwable) =>
+        val ret = runConfiguration
+          .errorConfiguration
+          .handleFailedFuture
+          .handleError(None, throwable)
+
+        new FinishedProgramOutput(ret, new String(), new String())
+      }
+
+      //PartialFunction.apply is deprecated
+      val recoverPF: PartialFunction[Throwable, ProgramOutput] = {
+        case x => recoverF(x)
+      }
+
+      jobOutput
+        .transform(transformProgramOutput, id)(ec)
+        .recover(recoverPF)(ec)
     }
 
-    def handleFailedFuture(throwable: Throwable): Throwable =
-      throwable
-
-    def apply(programOutput: ProgramOutput,
-                      runConfiguration: RunConfiguration): Unit = {
+    def applyErrorChecks(programOutput: ProgramOutput,
+                         runConfiguration: RunConfiguration): Unit = {
       //TODO: implement error checks on pipes
       /*
       val errs: Set[ErrorCause] = checks.foldLeft(Set.empty: Set[ErrorCause]) {
