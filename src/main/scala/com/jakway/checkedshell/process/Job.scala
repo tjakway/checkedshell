@@ -49,10 +49,7 @@ trait Job
       }
   }
 
-  private def handleErrors(e: ErrorData,
-                           runConfiguration: RunConfiguration): Unit = {
-    runConfiguration.errorBehavior.handleError(e)
-  }
+
 
   protected def runJob(input: JobInput)
                       (implicit rc: RunConfiguration,
@@ -125,4 +122,52 @@ object Job {
                   JobOutput
 
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
+
+  class ErrorCheckFunctions(val checks: Set[CheckFunction]) {
+    def apply(jobOutput: JobOutput,
+              runConfiguration: RunConfiguration,
+              ec: ExecutionContext): JobOutput = {
+      def transformProgramOutput(
+          programOutput: ProgramOutput): ProgramOutput = {
+        apply(programOutput, runConfiguration)
+        programOutput
+      }
+
+      jobOutput.transform(
+        transformProgramOutput,
+        handleFailedFuture)(ec)
+    }
+
+    def handleFailedFuture(throwable: Throwable): Throwable =
+      throwable
+
+    def apply(programOutput: ProgramOutput,
+                      runConfiguration: RunConfiguration): Unit = {
+      //TODO: implement error checks on pipes
+      /*
+      val errs: Set[ErrorCause] = checks.foldLeft(Set.empty: Set[ErrorCause]) {
+        case (acc, thisCheck) => {
+          acc ++ thisCheck(output).toSet
+        }
+      }
+       */
+      val errs: Set[ErrorCause] = Set.empty
+      if(errs.nonEmpty) {
+        val finalCause = ErrorCause(errs)
+
+        val errorData = ErrorData(None, finalCause)
+
+        handleErrors(errorData, runConfiguration)
+
+        //depending on the run configuration the error will either have caused execution to
+        //terminate or will have been handled somehow
+        //return the output if we're going to continue
+      }
+    }
+
+    def handleErrors(e: ErrorData,
+                     runConfiguration: RunConfiguration): Unit = {
+      runConfiguration.errorConfiguration.standardErrorBehavior.handleError(e)
+    }
+  }
 }
