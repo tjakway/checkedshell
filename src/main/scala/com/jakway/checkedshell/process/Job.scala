@@ -27,9 +27,7 @@ trait Job
   final def run(input: JobInput)
                (implicit rc: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
-
-    execJob(input)(rc, ec)
-        .flatMap(errorCheckFunctions.applyErrorChecks(_, rc, ec))
+    errorCheckFunctions(execJob(input)(rc, ec))
   }
 
   protected def execJob(input: JobInput)
