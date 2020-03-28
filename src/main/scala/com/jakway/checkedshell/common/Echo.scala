@@ -5,7 +5,6 @@ import java.util.Formatter
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.output.FinishedProgramOutput
 import com.jakway.checkedshell.process.Job.RunJobF
-import com.jakway.checkedshell.process.Task
 
 import scala.concurrent.{ExecutionContext, Future}
 

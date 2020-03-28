@@ -5,7 +5,7 @@ import com.jakway.checkedshell.data.StreamWriters
 import com.jakway.checkedshell.data.output.{FinishedProgramOutput, ProgramOutput}
 import com.jakway.checkedshell.process.Job.{JobInput, JobOutput}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * A wrapper class for when [[execJobF]] is a composition of [[Job.ExecJobF]]
@@ -13,9 +13,8 @@ import scala.concurrent.ExecutionContext
  * @param execJobF runs two or more [[Job.ExecJobF]] functions from
  *                other classes
  * @param streamWriters
- * @tparam A
  */
-class MultiStepJob[A](val execJobF: Job.ExecJobF,
+class MultiStepJob(val execJobF: Job.ExecJobF,
                       val streamWriters: StreamWriters,
                       val optDescription: Option[String] = None)
   extends Job {
@@ -23,13 +22,13 @@ class MultiStepJob[A](val execJobF: Job.ExecJobF,
   override protected def execJob(
    input: JobInput)(
    implicit rc: RunConfiguration,
-            ec: ExecutionContext): ProgramOutput = {
+            ec: ExecutionContext): Future[ProgramOutput] = {
     execJobF(input)(rc)(ec)
   }
 
   override protected def getStreamWriters: StreamWriters = streamWriters
 
   override protected def copyWithStreamWriters(
-    newStreamWriters: StreamWriters): MultiStepJob[A] =
-    new MultiStepJob[A](execJobF, newStreamWriters)
+    newStreamWriters: StreamWriters): Job =
+    new MultiStepJob(execJobF, newStreamWriters, optDescription)
 }

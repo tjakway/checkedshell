@@ -18,7 +18,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait Job
   extends HasStreamWriters[Job]
-    with RedirectionOperators[Job] {
+    with RedirectionOperators[Job]
+    with ShellOperators[Job]
+    with ExtraShellOperators[Job] {
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -44,7 +46,7 @@ trait Job
     a => b => c => d => e => runJob(a)(b)(c)(d, e)
 
   private def getExecJobF: ExecJobF =
-    a => b => c => execJob(a)(b, c)
+    a => b => c => run(a)(b, c)
 
   protected def runJob(input: JobInput)
                       (stdoutWrapper: StdoutWrapper)
@@ -109,10 +111,81 @@ trait Job
   }
   private def doPipe: ProgramOutput => Option[ProgramOutput] = Some.apply
   private def dontPipe: ProgramOutput => Option[ProgramOutput] = ignored => None
+  private def branchPipe: Boolean => ProgramOutput => Option[ProgramOutput] = {
+    branch =>
+      if(branch) {
+        doPipe
+      } else {
+        dontPipe
+      }
+  }
 
   def flatMap: Job => Job = chain(doPipe)
   //version of flatmap that ignores input from previous job
-  def sequence: Job => Job = chain(dontPipe)
+  override def sequence(arg: Job): Job = chain(dontPipe)(arg)
+
+  override def and(snd: Job): Job = {
+    branchCheckSuccess(
+      snd.getExecJobF,
+      FunctionJob.returnSuccessJob.getExecJobF,
+      false)
+  }
+
+  override def andPipe(snd: Job): Job = {
+    branchCheckSuccess(
+      snd.getExecJobF,
+      FunctionJob.returnSuccessJob.getExecJobF,
+      true)
+  }
+
+  override def or(snd: Job): Job = {
+    branchCheckSuccess(
+      FunctionJob.returnSuccessJob.getExecJobF,
+      snd.getExecJobF,
+      false)
+  }
+
+  override def orPipe(snd: Job): Job = {
+    branchCheckSuccess(
+      FunctionJob.returnSuccessJob.getExecJobF,
+      snd.getExecJobF,
+      true)
+  }
+
+  private def branchCheckSuccess = branch(_ == 0)
+
+  private def branch(decideCondition: Int => Boolean)
+                    (whenTrue: ExecJobF,
+                     whenFalse: ExecJobF,
+                     pipe: Boolean): Job = {
+    val newExecJob = (input: JobInput) =>
+      (rc: RunConfiguration) =>
+      (ex: ExecutionContext) => {
+      implicit val ec: ExecutionContext = ex
+      execJob(input)(rc, ec)
+        .flatMap(res => res.futureExitCode.map(e => (res, e)))
+        .flatMap { args =>
+          val (firstJobOutput, exitCode) = args
+
+          def passArg: JobInput = {
+            if(pipe) {
+              Some(firstJobOutput)
+            } else {
+              None
+            }
+          }
+
+          val branch = decideCondition(exitCode)
+          if(branch) {
+            whenTrue(passArg)(rc)(ec)
+          } else {
+            whenFalse(passArg)(rc)(ec)
+          }
+        }
+    }
+
+    copyWithNewExecJob(newExecJob)
+  }
 }
 
 object Job {
