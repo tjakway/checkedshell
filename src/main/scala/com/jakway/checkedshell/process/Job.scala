@@ -157,19 +157,19 @@ object Job {
 
 
   class ErrorCheckFunctions(val checks: Set[CheckFunction]) {
-    def applyErrorChecks(output: ProgramOutput,
-              runConfiguration: RunConfiguration,
-              ec: ExecutionContext): JobOutput = {
+    def apply(in: JobOutput)
+              (implicit rc: RunConfiguration,
+                        ec: ExecutionContext): JobOutput = {
       def transformProgramOutput(
           programOutput: ProgramOutput): ProgramOutput = {
-        applyErrorChecks(programOutput, runConfiguration)
+        doErrorChecks(programOutput, rc)
         programOutput
       }
       def id: Throwable => Throwable = x => x
 
       //TODO: integrate job description parameter
       val recoverF: Throwable => ProgramOutput = { (throwable: Throwable) =>
-        val ret = runConfiguration
+        val ret = rc
           .errorConfiguration
           .handleFailedFuture
           .handleError(None, throwable)
@@ -182,13 +182,13 @@ object Job {
         case x => recoverF(x)
       }
 
-      output
-        .transform(transformProgramOutput, id)(ec)
+      in.transform(transformProgramOutput, id)(ec)
         .recover(recoverPF)(ec)
     }
 
-    def applyErrorChecks(programOutput: ProgramOutput,
-                         runConfiguration: RunConfiguration): Unit = {
+    private def doErrorChecks(
+                      programOutput: ProgramOutput,
+                      runConfiguration: RunConfiguration): Unit = {
       //TODO: implement error checks on pipes
       /*
       val errs: Set[ErrorCause] = checks.foldLeft(Set.empty: Set[ErrorCause]) {
