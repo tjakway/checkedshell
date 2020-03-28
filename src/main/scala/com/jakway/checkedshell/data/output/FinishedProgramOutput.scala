@@ -8,10 +8,11 @@ import scala.concurrent.Future
 class FinishedProgramOutput(val exitCode: Int,
                             val stdout: String,
                             val stderr: String)
-  extends InProcessProgramOutput(
+  //TODO: handle InputWrapper descriptions
+  extends InProgressProgramOutput(
     Future.successful(exitCode),
-    InputWrapper(stdout, FinishedProgramOutput.inputWrapperConversionEncoding),
-    InputWrapper(stderr, FinishedProgramOutput.inputWrapperConversionEncoding)
+    InputWrapper(stdout, FinishedProgramOutput.inputWrapperConversionEncoding, None),
+    InputWrapper(stderr, FinishedProgramOutput.inputWrapperConversionEncoding, None)
   ) {
 
   override def toString: String = {
