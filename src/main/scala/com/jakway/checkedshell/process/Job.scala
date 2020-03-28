@@ -12,12 +12,15 @@ import com.jakway.checkedshell.process.stream.pipes.PipeManager
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
 import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
 import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper.{StderrWrapper, StdoutWrapper}
+import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job] {
+
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   def optDescription: Option[String]
 
@@ -55,7 +58,10 @@ trait Job
                       (stdoutWrapper: StdoutWrapper)
                       (stderrWrapper: StderrWrapper)
                       (implicit rc: RunConfiguration,
-                                ec: ExecutionContext): Future[Int]
+                                ec: ExecutionContext): Future[Int] = {
+    val f = rc.defaultJobBehavior.runDefaultJob(logger)
+    f(input)(stdoutWrapper)(stderrWrapper)(rc)(ec)
+  }
 
   protected def copyWithNewExecJob(
     newExecJob: ExecJobF): Job = {
