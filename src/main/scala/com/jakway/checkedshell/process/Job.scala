@@ -6,7 +6,7 @@ import com.jakway.checkedshell.data.output.{FinishedProgramOutput, InProgressPro
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, JobInput, JobOutput, RunJobF}
+import com.jakway.checkedshell.process.Job._
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.pipes.PipeManager
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
@@ -28,6 +28,13 @@ trait Job
                (implicit rc: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
 
+    execJob(input)(rc, ec)
+        .flatMap(errorCheckFunctions.applyErrorChecks(_, rc, ec))
+  }
+
+  protected def execJob(input: JobInput)
+                       (implicit rc: RunConfiguration,
+                                 ec: ExecutionContext): Future[ProgramOutput] = {
     val (stdoutRead, stdoutWrite) =
       Job.mkStdoutPipe(rc.encoding, optDescription)
 
@@ -36,13 +43,15 @@ trait Job
 
 
     val futureExitCode = runJob(input)(stdoutWrite)(stderrWrite)(rc, ec)
-    val res = new InProgressProgramOutput(futureExitCode, stdoutRead, stderrRead)
-
-    errorCheckFunctions
-      .applyErrorChecks(res, rc, ec)
+    Future.successful(
+      new InProgressProgramOutput(futureExitCode, stdoutRead, stderrRead))
   }
 
+  private def getRunJobF: RunJobF =
+    a => b => c => d => e => runJob(a)(b)(c)(d, e)
 
+  private def getExecJobF: ExecJobF =
+    a => b => c => execJob(a)(b, c)
 
   protected def runJob(input: JobInput)
                       (stdoutWrapper: StdoutWrapper)
@@ -50,59 +59,46 @@ trait Job
                       (implicit rc: RunConfiguration,
                                 ec: ExecutionContext): Future[Int]
 
-  protected def copyWithNewRunJob(newRunJob: RunJobF): Job = {
-    new MultiStepJob(newRunJob, getStreamWriters)
+  protected def copyWithNewExecJob(
+    newExecJob: ExecJobF): Job = {
+    new MultiStepJob(newExecJob, getStreamWriters)
   }
 
   def checks: Set[CheckFunction] = Job.defaultCheckFunctions
 
-  def map(f: FinishedProgramOutput => FinishedProgramOutput): Job = {
-    def newRunJob(input: JobInput)
-                 (implicit rc: RunConfiguration,
-                           ec: ExecutionContext): JobOutput = {
-      runJob(input).map(f)
-    }
-
-    //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
-    def g: RunJobF =
-      a =>
-        (rc: RunConfiguration) =>
-        (ec: ExecutionContext) =>
-          newRunJob(a)(rc, ec)
-
-    copyWithNewRunJob(g)
-  }
-
-  //TODO: remove duplication between map and flatMap
-  //difficult because most of the code is signatures with little actual work
-  def flatMap(f: ProgramOutput => JobOutput): Job = {
-    def newRunJob(input: JobInput)
-                 (implicit rc: RunConfiguration,
-                           ec: ExecutionContext): JobOutput = {
-      runJob(input).flatMap(f)
-    }
-
-    //implicits only work for methods, see https://stackoverflow.com/questions/16414172/partially-applying-a-function-that-has-an-implicit-parameter
-    def g: RunJobF =
-      a => (rc: RunConfiguration) => (ec: ExecutionContext) => newRunJob(a)(rc, ec)
-    copyWithNewRunJob(g)
-  }
-
-  def flatMap(toOtherJob: Job): Job = {
-    def newRunFunction: RunJobF =
-      (input: Option[ProgramOutput]) =>
+  def map(f: ProgramOutput => ProgramOutput): Job = {
+    def newExecJob: ExecJobF =
+      (input: JobInput) =>
       (rc: RunConfiguration) =>
       (ec: ExecutionContext) => {
-        //run our job first, then the passed job
-        val firstJob: Job = this
-        val secondJob: Job = toOtherJob
-        firstJob.runJob(input)(rc, ec)
-          .flatMap { firstJobRes =>
-            secondJob.runJob(Some(firstJobRes))(rc, ec)
-          }(ec)
+        execJob(input)(rc, ec).map(f)(ec)
       }
 
-     copyWithNewRunJob(newRunFunction)
+    copyWithNewExecJob(newExecJob)
+  }
+
+  def mapFinishedOutput(
+    f: FinishedProgramOutput => FinishedProgramOutput): Job = {
+    def newExecJob: ExecJobF =
+      (input: JobInput) =>
+        (rc: RunConfiguration) =>
+          (ex: ExecutionContext) => {
+
+            implicit val ec: ExecutionContext = ex
+            execJob(input)(rc, ec)
+              .flatMap { output =>
+                output.toFuture.map { x =>
+                  val res = f(x)
+                  res: ProgramOutput
+                }
+              }
+          }
+
+    copyWithNewExecJob(newExecJob)
+  }
+
+  def flatMap(f: ProgramOutput => Future[ProgramOutput]): Job = {
+    ???
   }
 }
 
@@ -116,8 +112,30 @@ object Job {
                   ExecutionContext =>
                   Future[Int]
 
+  type ExecJobF = JobInput =>
+    RunConfiguration =>
+    ExecutionContext =>
+    Future[ProgramOutput]
+
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 
+
+  def runJobToExecJob(optDescription: Option[String])
+                     (runJobF: RunJobF): ExecJobF = {
+    (input: JobInput) => (rc: RunConfiguration) => (ec: ExecutionContext) => {
+
+      val (stdoutRead, stdoutWrite) =
+        Job.mkStdoutPipe(rc.encoding, optDescription)(rc)
+
+      val (stderrRead, stderrWrite) =
+        Job.mkStderrPipe(rc.encoding, optDescription)(rc)
+
+
+      val futureExitCode = runJobF(input)(stdoutWrite)(stderrWrite)(rc)(ec)
+      Future.successful(
+        new InProgressProgramOutput(futureExitCode, stdoutRead, stderrRead))
+    }
+  }
 
   def mkStdoutPipe(encoding: String,
                    jobDescription: Option[String])
