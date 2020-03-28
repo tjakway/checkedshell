@@ -36,16 +36,8 @@ trait Job
   protected def execJob(input: JobInput)
                        (implicit rc: RunConfiguration,
                                  ec: ExecutionContext): Future[ProgramOutput] = {
-    val (stdoutRead, stdoutWrite) =
-      Job.mkStdoutPipe(rc.encoding, optDescription)
-
-    val (stderrRead, stderrWrite) =
-      Job.mkStderrPipe(rc.encoding, optDescription)
-
-
-    val futureExitCode = runJob(input)(stdoutWrite)(stderrWrite)(rc, ec)
-    Future.successful(
-      new InProgressProgramOutput(futureExitCode, stdoutRead, stderrRead))
+    val execJobF = Job.runJobToExecJob(optDescription)(getRunJobF)
+    execJobF(input)(rc)(ec)
   }
 
   private def getRunJobF: RunJobF =
@@ -141,6 +133,12 @@ object Job {
   lazy val defaultCheckFunctions: Set[CheckFunction] = Set(NonzeroExitCodeCheck)
 
 
+  /**
+   * sets up pipes for a runJob function and returns their readable ends
+   * @param optDescription used for wrapper descriptions
+   * @param runJobF
+   * @return
+   */
   def runJobToExecJob(optDescription: Option[String])
                      (runJobF: RunJobF): ExecJobF = {
     (input: JobInput) => (rc: RunConfiguration) => (ec: ExecutionContext) => {
@@ -158,7 +156,7 @@ object Job {
     }
   }
 
-  def mkStdoutPipe(encoding: String,
+  private def mkStdoutPipe(encoding: String,
                    jobDescription: Option[String])
                   (implicit rc: RunConfiguration):
     (InputWrapper, OutputWrapper) = {
@@ -167,7 +165,7 @@ object Job {
 
     PipeManager.newWrapperPair(encoding, desc)(rc.closeBehavior)
   }
-  def mkStderrPipe(encoding: String,
+  private def mkStderrPipe(encoding: String,
                    jobDescription: Option[String])
                   (implicit rc: RunConfiguration):
   (InputWrapper, OutputWrapper) = {
