@@ -1,24 +1,14 @@
-name := "checkedshell"
-version := "1.0"
-scalaVersion := "2.12.9"
+import checkedshell.project.CommonSettings
 
-resolvers += Resolver.typesafeIvyRepo("releases")
-resolvers += Resolver.sonatypeRepo("snapshots")
+lazy val root = (project in file("."))
+    .aggregate(main, programs)
 
-libraryDependencies ++= 
-  Seq("org.slf4j" % "slf4j-parent" % "1.7.28",
-      "ch.qos.logback"  %  "logback-classic"    % "1.2.3",
+lazy val main = CommonSettings((project in file("main")))
 
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-      "org.scalatestplus" % "scalatestplus-scalacheck_2.12" % "1.0.0-SNAP8",
+lazy val programs = CommonSettings((project in file("programs")))
+                    .dependsOn(main)
 
-      "org.scalactic" %% "scalactic" % "3.0.8" % "test",
-      "org.scalacheck" %% "scalacheck" % "1.14.0" % "test")
-
-mainClass in assembly := Some("com.jakway.Main")
+//mainClass in assembly := Some("com.foo.bar.Baz")
 
 //ignore anything named snippets.scala
 excludeFilter in unmanagedSources := HiddenFileFilter || "snippets.scala"
-
-//enable more warnings
-scalacOptions in compile ++= Seq("-unchecked", "-deprecation", "-feature")
