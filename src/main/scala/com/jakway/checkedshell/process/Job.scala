@@ -95,9 +95,26 @@ trait Job
     copyWithNewExecJob(newExecJob)
   }
 
-  def flatMap(f: ProgramOutput => Future[ProgramOutput]): Job = {
-    ???
+  protected def chain(pipeFunction: ProgramOutput => Option[ProgramOutput])
+                     (to: Job): Job = {
+    def newExecJob: ExecJobF =
+      (input: JobInput) =>
+      (rc: RunConfiguration) =>
+      (ec: ExecutionContext) => {
+
+        run(input)(rc, ec)
+          .flatMap(firstJobOutput =>
+            to.run(pipeFunction(firstJobOutput))(rc, ec))(ec)
+      }
+
+    copyWithNewExecJob(newExecJob)
   }
+  private def doPipe: ProgramOutput => Option[ProgramOutput] = Some.apply
+  private def dontPipe: ProgramOutput => Option[ProgramOutput] = ignored => None
+
+  def flatMap: Job => Job = chain(doPipe)
+  //version of flatmap that ignores input from previous job
+  def sequence: Job => Job = chain(dontPipe)
 }
 
 object Job {
