@@ -1,6 +1,6 @@
 package com.jakway.checkedshell.error.cause
 
-import com.jakway.checkedshell.data.output.FinishedProgramOutput
+import com.jakway.checkedshell.data.output.ProgramOutput
 
-class BadProgramOutput(val output: FinishedProgramOutput)
+class BadProgramOutput(val output: ProgramOutput)
   extends ErrorCause
