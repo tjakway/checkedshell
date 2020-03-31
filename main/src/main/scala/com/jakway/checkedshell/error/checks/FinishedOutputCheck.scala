@@ -21,3 +21,7 @@ trait FinishedOutputCheck
                output: FinishedProgramOutput)
                                    (implicit rc: RunConfiguration): Set[ErrorCause]
 }
+
+object FinishedOutputCheck {
+  type GetOutput = FinishedProgramOutput => String
+}
