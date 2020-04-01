@@ -9,6 +9,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait FinishedOutputCheck
   extends OutputCheck {
+  override val forcesWait: Boolean = true
 
   override def checkOutput(output: JobOutput)
                           (implicit rc: RunConfiguration,

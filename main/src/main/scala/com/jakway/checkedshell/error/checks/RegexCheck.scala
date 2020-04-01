@@ -34,6 +34,11 @@ object RegexCheck {
     }
   }
 
+  /**
+   * This check can't lazily operate on a stream of lines for obvious reasons
+   * @param getOutput
+   * @param regex
+   */
   class TotalRegexCheck(val getOutput: GetOutput,
                         override val regex: Regex)
     extends RegexCheck with FinishedOutputCheck {

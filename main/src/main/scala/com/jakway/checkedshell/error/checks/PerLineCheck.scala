@@ -10,6 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 trait PerLineCheck extends OutputCheck {
+  override val forcesWait: Boolean = false
   def stopEarly: Boolean = PerLineCheck.defaultStopEarly
 
   protected def getLines: GetLines
