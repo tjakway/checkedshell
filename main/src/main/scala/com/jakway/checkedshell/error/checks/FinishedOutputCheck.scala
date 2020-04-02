@@ -20,7 +20,7 @@ trait FinishedOutputCheck
 
   protected def checkFinishedOutput(
                output: FinishedProgramOutput)
-                                   (implicit rc: RunConfiguration): Set[ErrorCause]
+              (implicit rc: RunConfiguration): Set[ErrorCause]
 }
 
 object FinishedOutputCheck {
