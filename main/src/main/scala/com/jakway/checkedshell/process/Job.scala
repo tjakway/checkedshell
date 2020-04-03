@@ -6,7 +6,7 @@ import com.jakway.checkedshell.data.output.{FinishedProgramOutput, InProgressPro
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
-import com.jakway.checkedshell.process.Job._
+import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, ExecJobF, JobInput, JobOutput, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.pipes.PipeManager
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
