@@ -5,7 +5,7 @@ import com.jakway.checkedshell.data.HasStreamWriters
 import com.jakway.checkedshell.data.output.{FinishedProgramOutput, InProgressProgramOutput, ProgramOutput}
 import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.cause.ErrorCause
-import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck}
+import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck, OutputCheckGroup}
 import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, ExecJobF, JobInput, JobOutput, RunJobF}
 import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.pipes.PipeManager
@@ -248,7 +248,7 @@ object Job {
 
 
 
-  class ErrorCheckFunctions(val checks: Set[CheckFunction]) {
+  class OutputCheckFunctions(val outputCheckGroup: OutputCheckGroup) {
     def apply(in: JobOutput)
               (implicit rc: RunConfiguration,
                         ec: ExecutionContext): JobOutput = {
@@ -296,10 +296,6 @@ object Job {
         val errorData = ErrorData(None, finalCause)
 
         handleErrors(errorData, runConfiguration)
-
-        //depending on the run configuration the error will either have caused execution to
-        //terminate or will have been handled somehow
-        //return the output if we're going to continue
       }
     }
 
