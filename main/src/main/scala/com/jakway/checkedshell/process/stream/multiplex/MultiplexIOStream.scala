@@ -1,5 +1,12 @@
 package com.jakway.checkedshell.process.stream.multiplex
 
-trait MultiplexIOStream[A] {
-  val subStreams: Seq[A]
+trait MultiplexIOStream {
+  def afterClose: () => Unit
+}
+
+object MultiplexIOStream {
+  val defaultAfterClose: () => Unit = {
+    def doNothing(): Unit = {}
+    doNothing
+  }
 }

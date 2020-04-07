@@ -2,9 +2,11 @@ package com.jakway.checkedshell.process.stream.multiplex
 
 import java.io.OutputStream
 
-class MultiplexOutputStream(val subStreams: Seq[OutputStream])
+class MultiplexOutputStream(val subStreams: Seq[OutputStream],
+                            val afterClose: () => Unit =
+                              MultiplexIOStream.defaultAfterClose)
   extends OutputStream
-    with MultiplexIOStream[OutputStream] {
+    with MultiplexIOStream {
 
   override def write(i: Int): Unit =
     subStreams.foreach(_.write(i))
