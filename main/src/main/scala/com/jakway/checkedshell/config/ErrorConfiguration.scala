@@ -10,11 +10,13 @@ import com.jakway.checkedshell.util.LogFunctions
 import org.slf4j.{Logger, LoggerFactory}
 
 case class ErrorConfiguration(standardErrorBehavior: ErrorBehavior,
+                              composeErrorChecks: Boolean,
                               handleFailedFuture: HandleFailedFuture)
 
 object ErrorConfiguration {
   val default: ErrorConfiguration = ErrorConfiguration(
     ThrowOnError,
+    composeErrorChecks = true,
     HandleFailedFuture.default
   )
 
