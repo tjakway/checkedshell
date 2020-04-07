@@ -48,6 +48,17 @@ trait Job
   private def getExecJobF: ExecJobF =
     a => b => c => run(a)(b, c)
 
+  /**
+   * This is what subclasses should override
+   * A default implementation is provided for convenience and
+   * use in logging
+   * @param input
+   * @param stdoutWrapper
+   * @param stderrWrapper
+   * @param rc
+   * @param ec
+   * @return
+   */
   protected def runJob(input: JobInput)
                       (stdoutWrapper: StdoutWrapper)
                       (stderrWrapper: StderrWrapper)
