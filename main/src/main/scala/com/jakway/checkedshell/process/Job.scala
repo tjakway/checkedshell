@@ -37,9 +37,21 @@ trait Job
 
   protected def execJob(input: JobInput)
                        (implicit rc: RunConfiguration,
-                                 ec: ExecutionContext): Future[ProgramOutput] = {
+                                 ec: ExecutionContext): JobOutput = {
     val execJobF = Job.runJobToExecJob(optDescription)(getRunJobF)
     execJobF(input)(rc)(ec)
+  }
+
+
+  private def composableExec(input: JobInput)
+                            (implicit rc: RunConfiguration,
+                                      ec: ExecutionContext): JobOutput = {
+
+    if(rc.errorConfiguration.composeErrorChecks) {
+      run(input)
+    } else {
+      execJob(input)
+    }
   }
 
   private def getRunJobF: RunJobF =
@@ -113,7 +125,7 @@ trait Job
       (rc: RunConfiguration) =>
       (ec: ExecutionContext) => {
 
-        run(input)(rc, ec)
+        composableExec(input)(rc, ec)
           .flatMap(firstJobOutput =>
             to.run(pipeFunction(firstJobOutput))(rc, ec))(ec)
       }
@@ -173,7 +185,7 @@ trait Job
       (rc: RunConfiguration) =>
       (ex: ExecutionContext) => {
       implicit val ec: ExecutionContext = ex
-      execJob(input)(rc, ec)
+      composableExec(input)(rc, ec)
         .flatMap(res => res.futureExitCode.map(e => (res, e)))
         .flatMap { args =>
           val (firstJobOutput, exitCode) = args
