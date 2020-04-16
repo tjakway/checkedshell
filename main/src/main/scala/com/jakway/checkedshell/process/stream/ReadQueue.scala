@@ -6,10 +6,16 @@ import java.util.{AbstractQueue => JAbstractQueue}
 import java.util.concurrent.{ConcurrentLinkedQueue => JConcurrentLinkedQueue}
 import java.util.concurrent.atomic.AtomicBoolean
 
+import com.jakway.checkedshell.process.stream
 import com.jakway.checkedshell.process.stream.ReadQueue.{BaseType, EntryType, PayloadType, ReadQueueEvent, ReadQueueThread}
+import com.jakway.checkedshell.process.stream.pipes.output.PacketOutputStream
+import com.jakway.checkedshell.process.stream.pipes.output.PacketOutputStream.PacketType
 import org.slf4j.{Logger, LoggerFactory}
 
-class ReadQueue private (val writeTo: OutputStream) extends Closeable {
+class ReadQueue private (val writeTo: OutputStream,
+                         val copyPackets: Boolean =
+                          PacketOutputStream.defaultCopyPackets)
+  extends Closeable {
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
   private val queue: BaseType =
@@ -20,6 +26,8 @@ class ReadQueue private (val writeTo: OutputStream) extends Closeable {
     new ReadQueueThread(this, writeTo, killFlag)
 
   private def start(): Unit = thread.start()
+  private lazy val packetStream =
+    new ReadQueue.ReadQueuePacketOutputStream(this, copyPackets)
 
   def add(x: PayloadType): Unit = {
     queue.add(ReadQueueEvent.Continue(x))
@@ -43,8 +51,10 @@ object ReadQueue {
     case class Continue(entry: PayloadType) extends ReadQueueEvent
   }
 
-  def apply(writeTo: OutputStream): ReadQueue = {
-    val queue = new ReadQueue(writeTo)
+  def apply(writeTo: OutputStream,
+            copyPackets: Boolean =
+              PacketOutputStream.defaultCopyPackets): ReadQueue = {
+    val queue = new ReadQueue(writeTo, copyPackets)
     queue.start()
     queue
   }
@@ -79,5 +89,12 @@ object ReadQueue {
         case ReadQueueEvent.Continue(bytes) => writeTo.write(bytes)
       }
     }
+  }
+
+  private class ReadQueuePacketOutputStream(val readQueue: ReadQueue,
+                                            override val copyPackets: Boolean)
+    extends PacketOutputStream {
+    override protected def forward(packet: PacketType): Unit =
+      readQueue.add(packet)
   }
 }
