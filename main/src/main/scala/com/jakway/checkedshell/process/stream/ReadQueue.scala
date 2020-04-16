@@ -1,16 +1,16 @@
 package com.jakway.checkedshell.process.stream
 
 import java.io.{Closeable, OutputStream}
-import java.util
-import java.util.{AbstractQueue => JAbstractQueue}
-import java.util.concurrent.{ConcurrentLinkedQueue => JConcurrentLinkedQueue}
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{ConcurrentLinkedQueue => JConcurrentLinkedQueue}
+import java.util.{AbstractQueue => JAbstractQueue}
 
-import com.jakway.checkedshell.process.stream
-import com.jakway.checkedshell.process.stream.ReadQueue.{BaseType, EntryType, PayloadType, ReadQueueEvent, ReadQueueThread}
+import com.jakway.checkedshell.process.stream.ReadQueue._
 import com.jakway.checkedshell.process.stream.pipes.output.PacketOutputStream
 import com.jakway.checkedshell.process.stream.pipes.output.PacketOutputStream.PacketType
 import org.slf4j.{Logger, LoggerFactory}
+
+import scala.annotation.tailrec
 
 class ReadQueue private (val writeTo: OutputStream,
                          val copyPackets: Boolean =
@@ -78,7 +78,8 @@ object ReadQueue {
       }
     }
 
-    override def run(): Unit = {
+    @tailrec
+    final override def run(): Unit = {
       nextEvent match {
           //TODO: close handling
         case ReadQueueEvent.Stop => {
@@ -86,7 +87,10 @@ object ReadQueue {
           writeTo.close()
         }
 
-        case ReadQueueEvent.Continue(bytes) => writeTo.write(bytes)
+        case ReadQueueEvent.Continue(bytes) => {
+          writeTo.write(bytes)
+          run()
+        }
       }
     }
   }
