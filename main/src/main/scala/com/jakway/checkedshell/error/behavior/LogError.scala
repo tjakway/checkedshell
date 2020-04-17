@@ -6,6 +6,8 @@ import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.util.LogFunctions
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * @param logF error logging function
  */
@@ -36,5 +38,20 @@ object LogError extends LogFunctions {
     fmt.format("Error cause: %s", e.cause.toString)
 
     fmt.toString
+  }
+
+  def formatThrowable(t: Throwable): String = {
+    t.toString
+  }
+
+  def logIfFailure[A](
+    logger: Logger,
+    logF: LogF = LogFunctions.error)
+    (t: => Try[A]): Unit = {
+
+    t match {
+      case Success(_) => {}
+      case Failure(e) => logF(logger)(formatThrowable(e))
+    }
   }
 }

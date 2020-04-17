@@ -1,17 +1,21 @@
 package com.jakway.checkedshell.process
 
+import java.io.InputStream
+
 import com.jakway.checkedshell.config.RunConfiguration
 import com.jakway.checkedshell.data.HasStreamWriters
 import com.jakway.checkedshell.data.output.{FinishedProgramOutput, InProgressProgramOutput, ProgramOutput}
 import com.jakway.checkedshell.error.ErrorData
+import com.jakway.checkedshell.error.behavior.CloseBehavior
 import com.jakway.checkedshell.error.cause.ErrorCause
-import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck, OutputCheckGroup}
-import com.jakway.checkedshell.process.Job.{ErrorCheckFunctions, ExecJobF, JobInput, JobOutput, RunJobF}
-import com.jakway.checkedshell.process.stream.RedirectionOperators
+import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck, OutputCheck, OutputCheckGroup}
+import com.jakway.checkedshell.process.Job._
+import com.jakway.checkedshell.process.stream.multiplex.MultiplexOutputStream
 import com.jakway.checkedshell.process.stream.pipes.PipeManager
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
-import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper
+import com.jakway.checkedshell.process.stream.pipes.output.{OutputWrapper, StreamForwarder}
 import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper.{StderrWrapper, StdoutWrapper}
+import com.jakway.checkedshell.process.stream.{ReadQueue, RedirectionOperators}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -26,13 +30,27 @@ trait Job
 
   def optDescription: Option[String]
 
-  protected val errorCheckFunctions: ErrorCheckFunctions =
-    new ErrorCheckFunctions(checks)
+  protected val outputCheckFunctions: OutputCheckFunctions =
+    new OutputCheckFunctions(checks)
 
   final def run(input: JobInput)
                (implicit rc: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
-    errorCheckFunctions(execJob(input)(rc, ec))
+
+    execJob(input)(rc, ec).flatMap { jobOutput =>
+
+      val allChecks: Set[OutputCheck] = outputCheckFunctions.allChecks
+      val stdoutStreams = multiplexStream(allChecks)(
+        jobOutput.pipedStdout.getInputStream,
+        rc.encoding, Some("Multiplexed stdout"), rc.closeBehavior)
+
+
+    }
+
+
+
+
+    errorCheckFunctions()
   }
 
   protected def execJob(input: JobInput)
@@ -269,9 +287,10 @@ object Job {
     PipeManager.newWrapperPair(encoding, desc)(rc.closeBehavior)
   }
 
-
-
   class OutputCheckFunctions(val outputCheckGroup: OutputCheckGroup) {
+    def allChecks: Set[OutputCheck] =
+      outputCheckGroup.allChecks.toSet
+
     def apply(in: JobOutput)
               (implicit rc: RunConfiguration,
                         ec: ExecutionContext): JobOutput = {
@@ -326,5 +345,41 @@ object Job {
                      runConfiguration: RunConfiguration): Unit = {
       runConfiguration.errorConfiguration.standardErrorBehavior.handleError(e)
     }
+  }
+
+
+  def multiplexStream[A](xs: Set[A])(toMultiplex: InputStream,
+    enc: String,
+    optDescription: Option[String],
+    closeBehavior: CloseBehavior):
+  (Thread, Map[A, InputWrapper]) = {
+
+    val pipeSet = xs
+      .map { thisX =>
+        val (inWrapper, outWrapper) =
+          PipeManager.newWrapperPair(enc, optDescription)(closeBehavior)
+
+        thisX -> (inWrapper, outWrapper.getOutputStream)
+      }
+
+    val multiplexOutputStream = new MultiplexOutputStream(
+      pipeSet.map(_._2._2).toSeq
+    )
+
+    def onThreadExit(): Unit = {
+      closeBehavior(multiplexOutputStream)
+    }
+
+    val thread = new StreamForwarder(
+      toMultiplex, multiplexOutputStream, onThreadExit)
+
+    //start the thread before we return
+    thread.start()
+
+    val xsWithInputWrappers = pipeSet.map {
+      case (x, (in, _ /*out*/)) => (x, in)
+    }
+
+    (thread, xsWithInputWrappers.toMap)
   }
 }

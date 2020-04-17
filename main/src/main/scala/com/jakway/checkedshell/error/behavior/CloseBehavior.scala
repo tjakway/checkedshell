@@ -27,6 +27,10 @@ class CloseBehavior(val logError: LogError)
       }
     }
   }
+
+  def apply(c: => Closeable): Unit = {
+    CloseBehavior.wrapCloseCall(c).right.get
+  }
 }
 
 object CloseBehavior {
