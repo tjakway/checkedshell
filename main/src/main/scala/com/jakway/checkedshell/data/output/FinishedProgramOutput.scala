@@ -1,19 +1,25 @@
 package com.jakway.checkedshell.data.output
 
 import com.jakway.checkedshell.config.Config
+import com.jakway.checkedshell.data.output.ProgramOutput.Accumulator
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
 
 import scala.concurrent.Future
 
 class FinishedProgramOutput(val exitCode: Int,
                             val stdout: String,
-                            val stderr: String)
+                            val stderr: String,
+                            override val accumulator: Accumulator)
   //TODO: handle InputWrapper descriptions
   extends InProgressProgramOutput(
     Future.successful(exitCode),
     InputWrapper(stdout, FinishedProgramOutput.inputWrapperConversionEncoding, None),
-    InputWrapper(stderr, FinishedProgramOutput.inputWrapperConversionEncoding, None)
+    InputWrapper(stderr, FinishedProgramOutput.inputWrapperConversionEncoding, None),
+    accumulator
   ) {
+
+  override def withAccumulator(accumulator: Accumulator): ProgramOutput =
+    new FinishedProgramOutput(exitCode, stdout, stderr, accumulator)
 
   override def toString: String = {
     //workaround for scala not handling quotes in interpolated strings
