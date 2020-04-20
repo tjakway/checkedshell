@@ -9,22 +9,23 @@ import com.jakway.checkedshell.error.ErrorData
 import com.jakway.checkedshell.error.behavior.CloseBehavior
 import com.jakway.checkedshell.error.cause.ErrorCause
 import com.jakway.checkedshell.error.checks.{CheckFunction, NonzeroExitCodeCheck, OutputCheck, OutputCheckGroup}
-import com.jakway.checkedshell.process.Job._
+import com.jakway.checkedshell.process.Job.{JobInput, JobOutput, OutputCheckFunctions, RunJobF}
+import com.jakway.checkedshell.process.stream.RedirectionOperators
 import com.jakway.checkedshell.process.stream.multiplex.MultiplexOutputStream
 import com.jakway.checkedshell.process.stream.pipes.PipeManager
 import com.jakway.checkedshell.process.stream.pipes.input.InputWrapper
-import com.jakway.checkedshell.process.stream.pipes.output.{OutputWrapper, StreamForwarder}
 import com.jakway.checkedshell.process.stream.pipes.output.OutputWrapper.{StderrWrapper, StdoutWrapper}
-import com.jakway.checkedshell.process.stream.{ReadQueue, RedirectionOperators}
+import com.jakway.checkedshell.process.stream.pipes.output.{OutputWrapper, StreamForwarder}
 import org.slf4j.{Logger, LoggerFactory}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future, Promise}
 
 trait Job
   extends HasStreamWriters[Job]
     with RedirectionOperators[Job]
     with ShellOperators[Job]
     with ExtraShellOperators[Job] {
+
 
   private val logger: Logger = LoggerFactory.getLogger(getClass)
 
@@ -36,22 +37,46 @@ trait Job
   final def run(input: JobInput)
                (implicit rc: RunConfiguration,
                          ec: ExecutionContext): JobOutput = {
-
-    execJob(input)(rc, ec).flatMap { jobOutput =>
-
-      val allChecks: Set[OutputCheck] = outputCheckFunctions.allChecks
-      val stdoutStreams = multiplexStream(allChecks)(
-        jobOutput.pipedStdout.getInputStream,
-        rc.encoding, Some("Multiplexed stdout"), rc.closeBehavior)
-
-
-    }
-
-
-
-
-    errorCheckFunctions()
+    handleCleanup(runAndStartChecks(input))
   }
+
+  /**
+   * based on the flag
+   * [[com.jakway.checkedshell.config.ErrorConfiguration.waitForErrorChecks]]
+   * either wait for error checks and cleanup to complete before
+   * returning any output
+   * or store the cleanup future using
+   * [[com.jakway.checkedshell.data.output.ProgramOutput.Accumulator.withCleanupFuture()]]
+   * @param x
+   * @param ec
+   * @param rc
+   * @return
+   */
+  private def handleCleanup(x: JobOutput)
+    (implicit ec: ExecutionContext,
+      rc: RunConfiguration): JobOutput = {
+
+    //compose the JobOutput and cleanup into one future
+    val futureWithCleanup =
+      x.flatMap(ProgramOutput.AwaitErrorChecks.apply)
+
+    if(rc.errorConfiguration.waitForErrorChecks) {
+      futureWithCleanup
+    } else {
+      def f: Future[Unit] = futureWithCleanup.map(q => {})
+
+      //instead of waiting for the cleanup future to complete,
+      //track it in the output as an accumulator field
+      x.map { completedJobOutput =>
+        completedJobOutput.withAccumulator(
+          completedJobOutput
+            .accumulator
+            .withCleanupFuture(
+              newCleanupFuture = f))
+      }
+    }
+  }
+
 
   protected def execJob(input: JobInput)
                        (implicit rc: RunConfiguration,
@@ -60,6 +85,22 @@ trait Job
     execJobF(input)(rc)(ec)
   }
 
+  //TODO
+  protected def runAndStartChecks(input: JobInput)
+    (implicit rc: RunConfiguration,
+      ec: ExecutionContext): JobOutput = {
+    execJob(input)(rc, ec).flatMap { jobOutput =>
+
+      val allChecks: Set[OutputCheck] = outputCheckFunctions.allChecks
+      val stdoutStreams = Job.multiplexStream(allChecks)(
+        jobOutput.pipedStdout.getInputStream,
+        rc.encoding, Some("Multiplexed stdout"), rc.closeBehavior)
+
+
+    }
+
+    outputCheckFunctions()
+  }
 
   private def composableExec(input: JobInput)
                             (implicit rc: RunConfiguration,
@@ -382,4 +423,5 @@ object Job {
 
     (thread, xsWithInputWrappers.toMap)
   }
+
 }

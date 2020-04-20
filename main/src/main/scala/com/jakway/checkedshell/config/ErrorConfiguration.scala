@@ -9,15 +9,29 @@ import com.jakway.checkedshell.error.cause.UnhandledException
 import com.jakway.checkedshell.util.LogFunctions
 import org.slf4j.{Logger, LoggerFactory}
 
+import scala.concurrent.duration.Duration
+
+/**
+ *
+ * @param standardErrorBehavior
+ * @param composeErrorChecks
+ * @param handleFailedFuture
+ * @param waitForErrorChecks whether to return results before error checks are complete
+ * @param awaitJobTimeout
+ */
 case class ErrorConfiguration(standardErrorBehavior: ErrorBehavior,
                               composeErrorChecks: Boolean,
-                              handleFailedFuture: HandleFailedFuture)
+                              waitForErrorChecks: Boolean,
+                              handleFailedFuture: HandleFailedFuture,
+                              awaitJobTimeout: Duration)
 
 object ErrorConfiguration {
   val default: ErrorConfiguration = ErrorConfiguration(
     ThrowOnError,
     composeErrorChecks = true,
-    HandleFailedFuture.default
+    waitForErrorChecks = true,
+    HandleFailedFuture.default,
+    Duration.Inf
   )
 
   sealed trait HandleFailedFuture {
